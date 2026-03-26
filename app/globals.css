@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0f1117;
+  --bg2: #181c27;
+  --bg3: #1e2333;
+  --accent: #4f8ef7;
+  --accent2: #38d9a9;
+  --accent3: #f7a94f;
+  --accent4: #f75f7a;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: #e8eaf2; font-family: 'Noto Sans KR', sans-serif; }
