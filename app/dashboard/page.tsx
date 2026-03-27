@@ -7,7 +7,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 
-// ── 타입 ────────────────────────────────────────
 interface Row {
   name: string;
   date: Date;
@@ -16,10 +15,8 @@ interface Row {
   amount: number;
 }
 
-// ── 색상 ─────────────────────────────────────────
 const COLORS = ["#4f8ef7","#38d9a9","#f7a94f","#f75f7a","#a78bfa","#fb923c","#34d399","#f472b6","#60a5fa","#fbbf24"];
 
-// ── 숫자 포맷 ─────────────────────────────────────
 function fmt(n: number) {
   if (n >= 1e8) return (n / 1e8).toFixed(1) + "억";
   if (n >= 1e4) return Math.round(n / 1e4).toLocaleString() + "만";
@@ -27,7 +24,6 @@ function fmt(n: number) {
 }
 function fmtFull(n: number) { return Math.round(n).toLocaleString() + "원"; }
 
-// ── 커스텀 툴팁 ───────────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -42,41 +38,40 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// ── 메인 컴포넌트 ─────────────────────────────────
+const selectStyle: React.CSSProperties = {
+  padding: "7px 14px",
+  background: "#1e2333",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: "#e8eaf2",
+  borderRadius: 8,
+  fontSize: 13,
+  cursor: "pointer",
+  fontFamily: "Noto Sans KR, sans-serif",
+  outline: "none",
+  minWidth: 110,
+};
+
 export default function Dashboard() {
   const [data, setData] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeYear, setActiveYear] = useState<number | "all">("all");
   const [activeClient, setActiveClient] = useState<string>("all");
-  const [uploadMode, setUploadMode] = useState(false);
 
-  // 기본 CSV 로드
-useEffect(() => {
-  const SHEET_CSV_URL = "/api/sales";
-  
-  fetch(SHEET_CSV_URL)
-    .then(r => {
-      if (!r.ok) throw new Error("fetch failed");
-      return r.text();
-    })
-    .then(text => {
-      console.log("가져온 데이터 첫줄:", text.split("\n")[0]);
-      console.log("가져온 데이터 둘째줄:", text.split("\n")[1]);
-      const lines = text.split("\n");
-      let hi = 0;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes("거래처명") || lines[i].includes("사업자번호")) { hi = i; break; }
-      }
-      console.log("헤더 위치:", hi, "헤더:", lines[hi]);
-      parseCSV(lines.slice(hi).join("\n"));
-      setLoading(false);
-    })
-    .catch((e) => { 
-      console.error("에러:", e); 
-      setLoading(false); 
-    });
-}, []);
 
+  useEffect(() => {
+    fetch("/api/sales")
+      .then(r => { if (!r.ok) throw new Error("fetch failed"); return r.text(); })
+      .then(text => {
+        const lines = text.split("\n");
+        let hi = 0;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes("거래처명") || lines[i].includes("사업자번호")) { hi = i; break; }
+        }
+        parseCSV(lines.slice(hi).join("\n"));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   function parseCSV(text: string) {
     const result = Papa.parse<any>(text, { header: true, skipEmptyLines: true });
@@ -95,32 +90,6 @@ useEffect(() => {
     setActiveClient("all");
   }
 
-  // 파일 업로드
-  function handleFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const ab = e.target?.result as ArrayBuffer;
-      // EUC-KR 시도
-      try {
-        const dec = new TextDecoder("euc-kr");
-        let text = dec.decode(new Uint8Array(ab));
-        // 헤더 찾기
-        const lines = text.split("\n");
-        let hi = 0;
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].includes("거래처명") || lines[i].includes("사업자번호")) { hi = i; break; }
-        }
-        parseCSV(lines.slice(hi).join("\n"));
-      } catch {
-        const dec2 = new TextDecoder("utf-8");
-        parseCSV(dec2.decode(new Uint8Array(ab)));
-      }
-      setUploadMode(false);
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  // 필터된 데이터
   const filtered = useMemo(() => data.filter(d => {
     const yOk = activeYear === "all" || d.year === activeYear;
     const cOk = activeClient === "all" || d.name === activeClient;
@@ -128,6 +97,7 @@ useEffect(() => {
   }), [data, activeYear, activeClient]);
 
   const years = useMemo(() => [...new Set(data.map(d => d.year))].sort(), [data]);
+  const allClients = useMemo(() => [...new Set(data.map(d => d.name))].sort(), [data]);
 
   const topClients = useMemo(() => {
     const map: Record<string, number> = {};
@@ -142,34 +112,46 @@ useEffect(() => {
   const months = new Set(filtered.map(d => `${d.year}-${d.month}`)).size || 1;
   const avg = total / months;
 
-  // 월별 추이 데이터
+  // 전년 대비 증감률
+  const currentYear = activeYear === "all" ? Math.max(...(years.length ? years : [0])) : activeYear as number;
+  const prevYear = currentYear - 1;
+  const currentTotal = data.filter(d => d.year === currentYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
+  const prevTotal = data.filter(d => d.year === prevYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
+  const growthRate = prevTotal > 0 ? ((currentTotal - prevTotal) / prevTotal * 100) : null;
+  const growthColor = growthRate !== null ? (growthRate >= 0 ? "#38d9a9" : "#f75f7a") : "#5a5f78";
+  const growthStr = growthRate !== null
+    ? `${growthRate >= 0 ? "▲" : "▼"} 전년比 ${Math.abs(growthRate).toFixed(1)}%`
+    : "전년 데이터 없음";
+
+  // 차트 데이터 - 특정 연도 선택시 전년도도 함께 표시
+  const activeYears = activeYear === "all" ? years : [prevYear, activeYear as number].filter(y => years.includes(y) || y === activeYear);
+
   const trendData = useMemo(() => {
-    const activeYears = activeYear === "all" ? years : [activeYear];
+    const chartYears = activeYear === "all" ? years : [prevYear, activeYear as number];
     return Array.from({ length: 12 }, (_, m) => {
       const obj: any = { month: `${m + 1}월` };
-      activeYears.forEach(y => {
-        obj[`${y}년`] = filtered.filter(d => d.year === y && d.month === m + 1).reduce((s, d) => s + d.amount, 0);
+      chartYears.forEach(y => {
+        const clientFilter = activeClient === "all" ? data : data.filter(d => d.name === activeClient);
+        obj[`${y}년`] = clientFilter.filter(d => d.year === y && d.month === m + 1).reduce((s, d) => s + d.amount, 0);
       });
       return obj;
     });
-  }, [filtered, years, activeYear]);
+  }, [data, years, activeYear, activeClient, prevYear]);
 
-  // 거래처 파이
-  const pieData = useMemo(() => {
-    const top = activeYear === "all" ? topClients : [...new Set(filtered.map(d => d.name))].slice(0, 8);
-    return top.map(name => ({
-      name,
-      value: filtered.filter(d => d.name === name).reduce((s, d) => s + d.amount, 0)
-    })).filter(d => d.value > 0);
-  }, [filtered, topClients, activeYear]);
+const pieData = useMemo(() => {
+  const map: Record<string, number> = {};
+  filtered.forEach(d => { map[d.name] = (map[d.name] || 0) + d.amount; });
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, value]) => ({ name, value }));
+}, [filtered]);
 
-  // 연도별 바
-  const yearData = useMemo(() => years.map(y => ({
-    year: `${y}년`,
-    매출: filtered.filter(d => d.year === y).reduce((s, d) => s + d.amount, 0)
-  })), [filtered, years]);
+const yearData = useMemo(() => years.map(y => ({
+  year: `${y}년`,
+  매출: data.filter(d => d.year === y && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0)
+})), [data, years, activeClient]);
 
-  // 거래처 테이블
   const tableData = useMemo(() => {
     const map: Record<string, { amount: number; count: number }> = {};
     filtered.forEach(d => {
@@ -195,8 +177,6 @@ useEffect(() => {
     borderRadius: 16, padding: 24
   };
 
-  const activeYears = activeYear === "all" ? years : [activeYear as number];
-
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117" }}>
       {/* 탑바 */}
@@ -205,52 +185,29 @@ useEffect(() => {
           <span style={{ fontFamily: "monospace", fontSize: 12, letterSpacing: 3, color: "#4f8ef7", fontWeight: 600 }}>SEKYUNG</span>
           <span style={{ color: "#5a5f78", fontSize: 14 }}>매출 대시보드</span>
         </div>
-        <button
-          onClick={() => setUploadMode(true)}
-          style={{ padding: "8px 18px", background: "#1e2333", border: "1px solid rgba(255,255,255,0.1)", color: "#8b90a8", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "Noto Sans KR, sans-serif" }}
-        >
-          📂 CSV 업데이트
-        </button>
+
       </div>
 
-      {/* 업로드 모달 */}
-      {uploadMode && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
-          onClick={() => setUploadMode(false)}>
-          <div style={{ ...cardStyle, width: 400, textAlign: "center" }} onClick={e => e.stopPropagation()}>
-            <p style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>CSV 파일 올리기</p>
-            <p style={{ color: "#8b90a8", fontSize: 13, marginBottom: 24 }}>이지폼에서 내보낸 CSV 파일을 선택하세요</p>
-            <label style={{ display: "block", border: "2px dashed rgba(79,142,247,0.4)", borderRadius: 12, padding: "40px 24px", cursor: "pointer", background: "rgba(79,142,247,0.05)" }}>
-              <input type="file" accept=".csv" style={{ display: "none" }}
-                onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
-              <span style={{ fontSize: 36 }}>📂</span>
-              <p style={{ marginTop: 12, color: "#e8eaf2", fontSize: 14 }}>클릭해서 파일 선택</p>
-            </label>
-            <button onClick={() => setUploadMode(false)}
-              style={{ marginTop: 16, padding: "8px 20px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#8b90a8", borderRadius: 8, cursor: "pointer", fontSize: 13, fontFamily: "Noto Sans KR, sans-serif" }}>
-              닫기
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* 필터 바 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#181c27", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#181c27", flexWrap: "wrap" }}>
         <span style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1, fontWeight: 600 }}>연도</span>
-        {(["all", ...years] as (number | "all")[]).map(y => (
-          <button key={y} onClick={() => setActiveYear(y)}
-            style={{ padding: "5px 14px", borderRadius: 20, border: `1px solid ${activeYear === y ? "#4f8ef7" : "rgba(255,255,255,0.1)"}`, background: activeYear === y ? "#4f8ef7" : "transparent", color: activeYear === y ? "#fff" : "#8b90a8", fontSize: 13, cursor: "pointer", fontFamily: "Noto Sans KR, sans-serif", fontWeight: activeYear === y ? 600 : 400 }}>
-            {y === "all" ? "전체" : `${y}년`}
-          </button>
-        ))}
-        <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.1)", margin: "0 4px" }} />
+        <select value={activeYear} onChange={e => setActiveYear(e.target.value === "all" ? "all" : Number(e.target.value))} style={selectStyle}>
+          <option value="all">전체</option>
+          {years.map(y => <option key={y} value={y}>{y}년</option>)}
+        </select>
+
         <span style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1, fontWeight: 600 }}>거래처</span>
-        {(["all", ...topClients] as string[]).map(c => (
-          <button key={c} onClick={() => setActiveClient(c)}
-            style={{ padding: "5px 14px", borderRadius: 20, border: `1px solid ${activeClient === c ? "#4f8ef7" : "rgba(255,255,255,0.1)"}`, background: activeClient === c ? "#4f8ef7" : "transparent", color: activeClient === c ? "#fff" : "#8b90a8", fontSize: 13, cursor: "pointer", fontFamily: "Noto Sans KR, sans-serif", fontWeight: activeClient === c ? 600 : 400, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {c === "all" ? "전체" : c}
+        <select value={activeClient} onChange={e => setActiveClient(e.target.value)} style={{ ...selectStyle, minWidth: 180 }}>
+          <option value="all">전체</option>
+          {allClients.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+
+        {activeYear !== "all" || activeClient !== "all" ? (
+          <button onClick={() => { setActiveYear("all"); setActiveClient("all"); }}
+            style={{ padding: "7px 14px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#5a5f78", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: "Noto Sans KR, sans-serif" }}>
+            초기화
           </button>
-        ))}
+        ) : null}
       </div>
 
       {/* 메인 */}
@@ -258,18 +215,31 @@ useEffect(() => {
 
         {/* KPI */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-          {[
-            { label: "총 매출 (공급가액)", value: fmt(total), sub: fmtFull(total), color: "#4f8ef7" },
-            { label: "거래 건수", value: count.toLocaleString() + "건", sub: "세금계산서 발행", color: "#38d9a9" },
-            { label: "거래처 수", value: clients + "개사", sub: "활성 거래처", color: "#f7a94f" },
-            { label: "월 평균 매출", value: fmt(avg), sub: fmtFull(avg), color: "#f75f7a" },
-          ].map((k, i) => (
-            <div key={i} style={{ ...cardStyle, borderTop: `2px solid ${k.color}` }}>
-              <p style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1.5, fontWeight: 600, marginBottom: 12 }}>{k.label}</p>
-              <p style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 600, color: "#e8eaf2", marginBottom: 4 }}>{k.value}</p>
-              <p style={{ fontSize: 12, color: "#5a5f78" }}>{k.sub}</p>
-            </div>
-          ))}
+          {/* 총 매출 - 전년 대비 증감률 포함 */}
+          <div style={{ ...cardStyle, borderTop: "2px solid #4f8ef7" }}>
+            <p style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1.5, fontWeight: 600, marginBottom: 12 }}>총 매출 (공급가액)</p>
+            <p style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 600, color: "#e8eaf2", marginBottom: 4 }}>{fmt(total)}</p>
+            <p style={{ fontSize: 12, color: "#5a5f78" }}>{fmtFull(total)}</p>
+            <p style={{ fontSize: 12, color: growthColor, marginTop: 8, fontWeight: 600 }}>{growthStr}</p>
+          </div>
+          {/* 거래 건수 */}
+          <div style={{ ...cardStyle, borderTop: "2px solid #38d9a9" }}>
+            <p style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1.5, fontWeight: 600, marginBottom: 12 }}>거래 건수</p>
+            <p style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 600, color: "#e8eaf2", marginBottom: 4 }}>{count.toLocaleString()}건</p>
+            <p style={{ fontSize: 12, color: "#5a5f78" }}>세금계산서 발행</p>
+          </div>
+          {/* 거래처 수 */}
+          <div style={{ ...cardStyle, borderTop: "2px solid #f7a94f" }}>
+            <p style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1.5, fontWeight: 600, marginBottom: 12 }}>거래처 수</p>
+            <p style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 600, color: "#e8eaf2", marginBottom: 4 }}>{clients}개사</p>
+            <p style={{ fontSize: 12, color: "#5a5f78" }}>활성 거래처</p>
+          </div>
+          {/* 월 평균 */}
+          <div style={{ ...cardStyle, borderTop: "2px solid #f75f7a" }}>
+            <p style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1.5, fontWeight: 600, marginBottom: 12 }}>월 평균 매출</p>
+            <p style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 600, color: "#e8eaf2", marginBottom: 4 }}>{fmt(avg)}</p>
+            <p style={{ fontSize: 12, color: "#5a5f78" }}>{fmtFull(avg)}</p>
+          </div>
         </div>
 
         {/* 월별 추이 */}
@@ -283,7 +253,16 @@ useEffect(() => {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12, color: "#8b90a8" }} />
               {activeYears.map((y, i) => (
-                <Line key={y} type="monotone" dataKey={`${y}년`} stroke={COLORS[i % COLORS.length]} strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 7 }} />
+                <Line 
+                  key={y} 
+                  type="monotone" 
+                  dataKey={`${y}년`} 
+                  stroke={y === prevYear && activeYear !== "all" ? "rgba(255,255,255,0.3)" : COLORS[i % COLORS.length]} 
+                  strokeWidth={y === prevYear && activeYear !== "all" ? 1.5 : 2.5}
+                  strokeDasharray={y === prevYear && activeYear !== "all" ? "5 5" : undefined}
+                  dot={{ r: y === prevYear && activeYear !== "all" ? 2 : 4 }} 
+                  activeDot={{ r: 7 }} 
+                />
               ))}
             </LineChart>
           </ResponsiveContainer>
@@ -295,7 +274,8 @@ useEffect(() => {
             <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>🏢 거래처별 매출 비중</p>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" nameKey="name">
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} 
+                dataKey="value" nameKey="name" startAngle={90} endAngle={-270} >
                   {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip formatter={(v: number) => fmtFull(v)} contentStyle={{ background: "#1e2333", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 12 }} />
@@ -316,42 +296,6 @@ useEffect(() => {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 거래처 테이블 */}
-        <div style={cardStyle}>
-          <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>🏆 거래처별 매출 순위 <span style={{ fontSize: 12, color: "#5a5f78", fontWeight: 400 }}>총 {tableData.length}개사</span></p>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr>
-                  {["#", "거래처명", "공급가액", "거래건수", "비중", "비율"].map((h, i) => (
-                    <th key={i} style={{ textAlign: i >= 2 && i <= 4 ? "right" : i === 5 ? "left" : "left", padding: "10px 14px", color: "#5a5f78", fontSize: 11, fontWeight: 600, letterSpacing: 1, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map(([name, v], i) => {
-                  const pct = (v.amount / total * 100).toFixed(1);
-                  const barW = (v.amount / maxAmt * 100).toFixed(1);
-                  return (
-                    <tr key={name} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                      <td style={{ padding: "11px 14px", color: "#5a5f78", fontFamily: "monospace", fontSize: 12, width: 40 }}>{i + 1}</td>
-                      <td style={{ padding: "11px 14px", color: "#e8eaf2", fontWeight: 500 }}>{name}</td>
-                      <td style={{ padding: "11px 14px", textAlign: "right", fontFamily: "monospace", color: "#e8eaf2" }}>{fmtFull(v.amount)}</td>
-                      <td style={{ padding: "11px 14px", textAlign: "right", color: "#8b90a8" }}>{v.count}건</td>
-                      <td style={{ padding: "11px 14px", textAlign: "right", color: "#5a5f78" }}>{pct}%</td>
-                      <td style={{ padding: "11px 14px", minWidth: 120 }}>
-                        <div style={{ height: 4, background: "#1e2333", borderRadius: 2, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${barW}%`, background: COLORS[i % COLORS.length], borderRadius: 2 }} />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
 
