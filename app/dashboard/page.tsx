@@ -52,10 +52,29 @@ export default function Dashboard() {
 
   // 기본 CSV 로드
   useEffect(() => {
-    fetch("/data/sales.csv")
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1zFyFilMl9x0RGaNjBZHD1h4ta0rkDXrjnzpZ2Y1WeFw/export?format=csv";
+    console.log("SHEET_CSV_URL", SHEET_CSV_URL);
+
+    fetch(SHEET_CSV_URL)
       .then(r => r.text())
-      .then(text => { parseCSV(text); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(text => {
+        console.log("csv loaded length:", text.length);
+        console.log("csv 2026-02 count:", (text.match(/2026[-/.]0?2/g) || []).length);
+        console.log("csv sample: \n", text.slice(0, 500));
+
+        // 헤더 찾기 (이지폼 CSV 형식)
+        const lines = text.split("\n");
+        let hi = 0;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes("거래처명") || lines[i].includes("사업자번호")) { hi = i; break; }
+        }
+        parseCSV(lines.slice(hi).join("\n"));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("csv load failed", err);
+        setLoading(false);
+      });
   }, []);
 
   function parseCSV(text: string) {
