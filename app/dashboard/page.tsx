@@ -51,31 +51,33 @@ export default function Dashboard() {
   const [uploadMode, setUploadMode] = useState(false);
 
   // 기본 CSV 로드
-  useEffect(() => {
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1zFyFilMl9x0RGaNjBZHD1h4ta0rkDXrjnzpZ2Y1WeFw/export?format=csv";
-    console.log("SHEET_CSV_URL", SHEET_CSV_URL);
+useEffect(() => {
+  const SHEET_ID = "1zFyFilMl9x0RGaNjBZHD1h4ta0rkDXrjnzpZ2Y1WeFw";
+  const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+  
+  fetch(SHEET_CSV_URL)
+    .then(r => {
+      if (!r.ok) throw new Error("fetch failed");
+      return r.text();
+    })
+    .then(text => {
+      console.log("가져온 데이터 첫줄:", text.split("\n")[0]);
+      console.log("가져온 데이터 둘째줄:", text.split("\n")[1]);
+      const lines = text.split("\n");
+      let hi = 0;
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes("거래처명") || lines[i].includes("사업자번호")) { hi = i; break; }
+      }
+      console.log("헤더 위치:", hi, "헤더:", lines[hi]);
+      parseCSV(lines.slice(hi).join("\n"));
+      setLoading(false);
+    })
+    .catch((e) => { 
+      console.error("에러:", e); 
+      setLoading(false); 
+    });
+}, []);
 
-    fetch(SHEET_CSV_URL)
-      .then(r => r.text())
-      .then(text => {
-        console.log("csv loaded length:", text.length);
-        console.log("csv 2026-02 count:", (text.match(/2026[-/.]0?2/g) || []).length);
-        console.log("csv sample: \n", text.slice(0, 500));
-
-        // 헤더 찾기 (이지폼 CSV 형식)
-        const lines = text.split("\n");
-        let hi = 0;
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].includes("거래처명") || lines[i].includes("사업자번호")) { hi = i; break; }
-        }
-        parseCSV(lines.slice(hi).join("\n"));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("csv load failed", err);
-        setLoading(false);
-      });
-  }, []);
 
   function parseCSV(text: string) {
     const result = Papa.parse<any>(text, { header: true, skipEmptyLines: true });
