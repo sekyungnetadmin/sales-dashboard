@@ -52,8 +52,7 @@ export default function Dashboard() {
 
   // 기본 CSV 로드
 useEffect(() => {
-  const SHEET_ID = "1zFyFilMl9x0RGaNjBZHD1h4ta0rkDXrjnzpZ2Y1WeFw";
-  const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+  const SHEET_CSV_URL = "/api/sales";
   
   fetch(SHEET_CSV_URL)
     .then(r => {
