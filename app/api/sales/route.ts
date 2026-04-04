@@ -21,7 +21,7 @@ function findHeaderIndex(lines: string[]): number {
 export async function GET() {
   const results = await Promise.all(
     SHEETS.map(async ({ name, url }) => {
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetch(url + `&t=${Date.now()}`, { cache: "no-store" });
       const text = await res.text();
       const lines = text.split("\n");
       const hi = findHeaderIndex(lines);
