@@ -61,7 +61,7 @@ const selectStyle: React.CSSProperties = {
 export default function Dashboard() {
   const [data, setData] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeYear, setActiveYear] = useState<number | "all">("all");
+  const [activeYear, setActiveYear] = useState<number | "all">(2026);
   const [activeClient, setActiveClient] = useState<string>("all");
   const [monthModal, setMonthModal] = useState<MonthModal | null>(null);
   const [activeCompany, setActiveCompany] = useState<"all"|"세경네트"|"한두산업">("all");
@@ -157,10 +157,10 @@ export default function Dashboard() {
       });
       return obj;
     });
-  }, [data, years, activeYear, activeClient, prevYear]);
+  }, [data, years, activeYear, activeClient, prevYear, , activeCompany, companyFiltered]);
 
   // 분기별
-  const quarterYears = activeYear === "all" ? years : [activeYear as number];
+  const quarterYears = activeYear === "all" ? years : [prevYear, activeYear as number];
   const quarterData = useMemo(() => {
     const qLabels = ["1분기", "2분기", "3분기", "4분기"];
     return qLabels.map((q, qi) => {
@@ -171,7 +171,7 @@ export default function Dashboard() {
       });
       return obj;
     });
-  }, [data, years, activeYear, activeClient]);
+  }, [data, years, activeYear, activeClient, , activeCompany, companyFiltered]);
 
   const pieData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -182,7 +182,7 @@ export default function Dashboard() {
   const yearData = useMemo(() => years.map(y => ({
     year: `${y}년`,
     매출: companyFiltered.filter(d => d.year === y && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0)
-  })), [data, years, activeClient]);
+  })), [companyFiltered, years, activeClient]);
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", flexDirection: "column", gap: 16 }}>
@@ -345,7 +345,13 @@ export default function Dashboard() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12, color: "#8b90a8" }} />
               {quarterYears.map((y, i) => (
-                <Bar key={y} dataKey={`${y}년`} fill={COLORS[i % COLORS.length]} radius={[6, 6, 0, 0]} />
+                <Bar
+                  key={y}
+                  dataKey={`${y}년`}
+                  fill={y === prevYear && activeYear !== "all" ? "rgba(255,255,255,0.2)" : COLORS[i % COLORS.length]}
+                  radius={[6, 6, 0, 0]}
+                  opacity={y === prevYear && activeYear !== "all" ? 0.5 : 1}
+                />
               ))}
             </BarChart>
           </ResponsiveContainer>
