@@ -13,6 +13,7 @@ interface Row {
   year: number;
   month: number;
   amount: number;
+  company: string;  // ← 추가
 }
 
 interface MonthModal {
@@ -63,6 +64,7 @@ export default function Dashboard() {
   const [activeYear, setActiveYear] = useState<number | "all">("all");
   const [activeClient, setActiveClient] = useState<string>("all");
   const [monthModal, setMonthModal] = useState<MonthModal | null>(null);
+  const [activeCompany, setActiveCompany] = useState<"all"|"세경네트"|"한두산업">("all");
 
   useEffect(() => {
     fetch("/api/sales")
@@ -89,7 +91,8 @@ export default function Dashboard() {
       if (!name || !dateStr || isNaN(amount)) return;
       const date = new Date(dateStr.replace(/\./g, "-"));
       if (isNaN(date.getTime())) return;
-      rows.push({ name, date, year: date.getFullYear(), month: date.getMonth() + 1, amount });
+     const company = (r["업체명"] || "세경네트").trim();
+     rows.push({ name, date, year: date.getFullYear(), month: date.getMonth() + 1, amount, company });
     });
     setData(rows);
     setActiveYear("all");
@@ -112,8 +115,9 @@ export default function Dashboard() {
   const filtered = useMemo(() => data.filter(d => {
     const yOk = activeYear === "all" || d.year === activeYear;
     const cOk = activeClient === "all" || d.name === activeClient;
-    return yOk && cOk;
-  }), [data, activeYear, activeClient]);
+    const coOk = activeCompany === "all" || d.company === activeCompany;
+    return yOk && cOk && coOk;
+  }), [data, activeYear, activeClient, activeCompany]);
 
   const years = useMemo(() => [...new Set(data.map(d => d.year))].sort(), [data]);
   const allClients = useMemo(() => [...new Set(data.map(d => d.name))].sort(), [data]);
@@ -236,6 +240,24 @@ export default function Dashboard() {
 
       {/* 필터 바 */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#181c27", flexWrap: "wrap" }}>
+        {(["all", "세경네트", "한두산업"] as const).map(co => (
+  <button
+    key={co}
+    onClick={() => setActiveCompany(co)}
+    style={{
+      padding: "7px 16px",
+      borderRadius: 8,
+      border: "1px solid",
+      borderColor: activeCompany === co ? "#4f8ef7" : "rgba(255,255,255,0.12)",
+      background: activeCompany === co ? "rgba(79,142,247,0.15)" : "transparent",
+      color: activeCompany === co ? "#4f8ef7" : "#8b90a8",
+      fontSize: 13, fontWeight: 600, cursor: "pointer",
+      fontFamily: "Noto Sans KR, sans-serif",
+    }}
+  >
+    {co === "all" ? "전체 합산" : co}
+  </button>
+))}
         <span style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1, fontWeight: 600 }}>연도</span>
         <select value={activeYear} onChange={e => setActiveYear(e.target.value === "all" ? "all" : Number(e.target.value))} style={selectStyle}>
           <option value="all">전체</option>
