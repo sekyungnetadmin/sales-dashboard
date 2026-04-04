@@ -104,7 +104,7 @@ export default function Dashboard() {
     if (!monthStr) return;
     const month = parseInt(monthStr);
     const year = activeYear === "all" ? currentYear : activeYear as number;
-    const clientFilter = activeClient === "all" ? data : data.filter(d => d.name === activeClient);
+    const clientFilter = activeClient === "all" ? companyFiltered : companyFiltered.filter(d => d.name === activeClient);
     const monthData = clientFilter.filter(d => d.year === year && d.month === month);
     const map: Record<string, number> = {};
     monthData.forEach(d => { map[d.name] = (map[d.name] || 0) + d.amount; });
@@ -119,6 +119,10 @@ export default function Dashboard() {
     return yOk && cOk && coOk;
   }), [data, activeYear, activeClient, activeCompany]);
 
+  const companyFiltered = useMemo(() =>
+  activeCompany === "all" ? data : data.filter(d => d.company === activeCompany),
+[data, activeCompany]);
+
   const years = useMemo(() => [...new Set(data.map(d => d.year))].sort(), [data]);
   const allClients = useMemo(() => [...new Set(data.map(d => d.name))].sort(), [data]);
 
@@ -132,8 +136,8 @@ export default function Dashboard() {
   // 전년 대비
   const currentYear = activeYear === "all" ? Math.max(...(years.length ? years : [0])) : activeYear as number;
   const prevYear = currentYear - 1;
-  const currentTotal = data.filter(d => d.year === currentYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
-  const prevTotal = data.filter(d => d.year === prevYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
+  const currentTotal = companyFiltered.filter(d => d.year === currentYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
+  const prevTotal = companyFiltered.filter(d => d.year === prevYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
   const growthRate = prevTotal > 0 ? ((currentTotal - prevTotal) / prevTotal * 100) : null;
   const growthColor = growthRate !== null ? (growthRate >= 0 ? "#38d9a9" : "#f75f7a") : "#5a5f78";
   const growthStr = growthRate !== null
@@ -148,7 +152,7 @@ export default function Dashboard() {
     return Array.from({ length: 12 }, (_, m) => {
       const obj: any = { month: `${m + 1}월` };
       chartYears.forEach(y => {
-        const cf = activeClient === "all" ? data : data.filter(d => d.name === activeClient);
+        const cf = activeClient === "all" ? companyFiltered  : companyFiltered.filter(d => d.name === activeClient);
         obj[`${y}년`] = cf.filter(d => d.year === y && d.month === m + 1).reduce((s, d) => s + d.amount, 0);
       });
       return obj;
@@ -162,7 +166,7 @@ export default function Dashboard() {
     return qLabels.map((q, qi) => {
       const obj: any = { quarter: q };
       quarterYears.forEach(y => {
-        const cf = activeClient === "all" ? data : data.filter(d => d.name === activeClient);
+        const cf = activeClient === "all" ? companyFiltered  : companyFiltered.filter(d => d.name === activeClient);
         obj[`${y}년`] = cf.filter(d => d.year === y && d.month >= qi * 3 + 1 && d.month <= qi * 3 + 3).reduce((s, d) => s + d.amount, 0);
       });
       return obj;
@@ -177,7 +181,7 @@ export default function Dashboard() {
 
   const yearData = useMemo(() => years.map(y => ({
     year: `${y}년`,
-    매출: data.filter(d => d.year === y && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0)
+    매출: companyFiltered.filter(d => d.year === y && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0)
   })), [data, years, activeClient]);
 
   if (loading) return (
