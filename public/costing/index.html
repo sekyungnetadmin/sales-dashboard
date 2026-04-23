@@ -1,0 +1,581 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세경네트 마진율 역산 시뮬레이터</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:13px;color:#1a1a1a;background:#f5f5f3;padding:12px}
+h1{font-size:16px;font-weight:600;margin-bottom:4px}
+.sub{font-size:11px;color:#888;margin-bottom:16px}
+.tabs{display:flex;border-bottom:1px solid #e0e0e0;margin-bottom:0;background:#fff;border-radius:8px 8px 0 0;padding:0 4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:10px 12px;cursor:pointer;font-size:12px;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
+.tab.on{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:600}
+.tc{display:none;background:#fff;border-radius:0 0 8px 8px;padding:12px;border:1px solid #e0e0e0;border-top:none}
+.tc.on{display:block}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ig{display:flex;flex-direction:column;gap:3px}
+.ig label{font-size:11px;color:#888}
+.ig input{border:1px solid #e0e0e0;border-radius:6px;padding:6px 8px;font-size:12px;width:100%;background:#fafaf8;outline:none}
+.ig input:focus{border-color:#666;background:#fff}
+.st{font-size:11px;font-weight:600;color:#555;letter-spacing:.04em;margin:16px 0 8px;text-transform:uppercase}
+.st:first-child{margin-top:0}
+.tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
+th{text-align:left;padding:6px 8px;font-weight:600;font-size:11px;color:#888;border-bottom:1px solid #e0e0e0;white-space:nowrap;background:#fafaf8}
+td{padding:7px 8px;border-bottom:1px solid #f0f0f0;vertical-align:middle;white-space:nowrap}
+.group-hdr td{background:#f0f4ff;font-weight:600;font-size:11px;color:#3b4fc8;padding:5px 8px;border-bottom:none;border-top:1px solid #dce3f8}
+.group-hdr.fil td{background:#eef2ff;color:#3b4fc8}
+.group-hdr.asm td{background:#ecfdf5;color:#065f46}
+.group-hdr.pur td{background:#fffbeb;color:#92400e}
+.subtotal td{background:#f8f8f6;font-weight:600;font-size:11px;color:#555;border-top:1px solid #e0e0e0}
+.total-row td{background:#1a1a1a;color:#fff;font-weight:700;font-size:12px;border:none}
+tr:not(.group-hdr):not(.subtotal):not(.total-row):hover td{background:#fafaf8}
+.pos{color:#057a55;font-weight:600}
+.neg{color:#e02424;font-weight:600}
+.warn{color:#c27803;font-weight:600}
+.smry{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.sc{background:#fafaf8;border-radius:8px;padding:12px 14px;border:1px solid #e0e0e0}
+.sc .sl{font-size:11px;color:#888;margin-bottom:4px}
+.sc .sv{font-size:18px;font-weight:700}
+.sc .sd{font-size:11px;color:#888;margin-top:6px;line-height:1.9}
+.note{font-size:11px;color:#666;padding:8px 10px;background:#f0f4ff;border-radius:6px;margin-bottom:12px;border-left:3px solid #4f7ef8}
+.dup{color:#e02424;font-weight:600}
+.ddn{color:#057a55;font-weight:600}
+.lock-btn{padding:8px 20px;font-size:12px;background:#e8f0fe;color:#1a56db;border:1px solid #c5d4f6;border-radius:6px;cursor:pointer;font-weight:600}
+.lock-btn:hover{background:#c5d4f6}
+.save-btn{padding:6px 16px;font-size:12px;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;background:#fff}
+.save-btn:hover{background:#f5f5f3}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.ti{text-align:right}
+.bold{font-weight:600}
+.nav-back{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:12px;color:#4f8ef7;border:1px solid rgba(79,142,247,0.4);border-radius:6px;text-decoration:none;background:rgba(79,142,247,0.08);font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;margin-bottom:12px}
+.nav-back:hover{background:rgba(79,142,247,0.15)}
+@media(max-width:640px){
+  body{padding:8px}
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(2,1fr)}
+  .smry{grid-template-columns:repeat(2,1fr)}
+  .smry .sc:last-child{grid-column:span 2}
+  .sc .sv{font-size:15px}
+  h1{font-size:14px}
+  .tab{padding:8px 10px;font-size:11px}
+  .tc{padding:10px 8px}
+}
+</style>
+</head>
+<body>
+<a href="/dashboard" class="nav-back">← 매출 대시보드</a>
+<div class="hdr">
+  <div>
+    <h1>마진율 역산 시뮬레이터</h1>
+    <div class="sub">세경네트(주) · 비용 변동 시 기준 마진율 유지를 위한 단가 역산</div>
+  </div>
+  <button class="save-btn" id="savebtn" onclick="saveAll()">저장</button>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="sw('base',this)">① 기준 설정</div>
+  <div class="tab" onclick="sw('cur',this)">② 현재 비용</div>
+  <div class="tab" onclick="sw('rev',this)">③ 역산 결과</div>
+</div>
+
+<!-- ① 기준 -->
+<div id="tc-base" class="tc on">
+  <div class="note">기준 시점(예: 3월) 데이터를 입력하고 <strong>기준 잠금</strong>을 누르면 각 품목의 마진율이 저장됩니다.</div>
+  <div class="st">생산량</div>
+  <div class="g3">
+    <div class="ig"><label>연간 총 생산 m² (기계인건비 기준)</label><input type="text" id="b_tp" value="1,172,573" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>연간 총 조립 m² (조립·관리인건비 기준)</label><input type="text" id="b_ta" value="1,179,540" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>총 생산+조립 m² (기타관리비 기준)</label><input type="text" id="b_tb" value="1,323,390" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+  </div>
+  <div class="st">인건비 (연간합계)</div>
+  <div class="g4">
+    <div class="ig"><label>기계 인건비 (원)</label><input type="text" id="b_mc" value="302,870,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>조립 인건비 (원)</label><input type="text" id="b_ac" value="350,280,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>관리 인건비 (원)</label><input type="text" id="b_gc" value="453,640,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>기타관리비 (원)</label><input type="text" id="b_oc" value="350,000,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+  </div>
+  <div class="st">원료 단가</div>
+  <div class="g3">
+    <div class="ig"><label>원료+방사 (원/kg) — 기준 시점</label><input type="text" id="b_mk" value="2000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>매입단가 — 210합 (원/m²)</label><input type="text" id="b_pp1" value="1063.8" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="ig"><label>매입단가 — 60결망 (원/m²)</label><input type="text" id="b_pp2" value="750" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+  </div>
+  <div class="st">기준 판매단가</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>품목</th><th>단위</th>
+      <th class="ti">판매량</th>
+      <th class="ti" style="color:#1a56db">원료+방사비용</th>
+      <th class="ti">기준 단가</th>
+      <th class="ti">총원가/단위</th>
+      <th class="ti">총 매출</th>
+      <th class="ti">총 이윤</th>
+      <th class="ti">기준 마진율</th>
+    </tr></thead>
+    <tbody id="base-tbody"></tbody>
+  </table></div>
+  <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+    <button class="lock-btn" onclick="lockBase()">기준 잠금 (스냅샷 저장)</button>
+    <span id="lock-status" style="font-size:12px;color:#888">아직 잠금 전</span>
+  </div>
+</div>
+
+<!-- ② 현재 비용 -->
+<div id="tc-cur" class="tc">
+  <div class="note">비용 변동 수치를 입력하세요. 단가는 기준 단가로 고정한 채 마진율 하락폭을 확인합니다.</div>
+  <div class="st">생산량</div>
+  <div class="g3">
+    <div class="ig"><label>연간 총 생산 m²</label><input type="text" id="c_tp" value="1,172,573" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>연간 총 조립 m²</label><input type="text" id="c_ta" value="1,179,540" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>총 생산+조립 m²</label><input type="text" id="c_tb" value="1,323,390" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+  </div>
+  <div class="st">인건비 (연간합계)</div>
+  <div class="g4">
+    <div class="ig"><label>기계 인건비 (원)</label><input type="text" id="c_mc" value="302,870,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>조립 인건비 (원)</label><input type="text" id="c_ac" value="350,280,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>관리 인건비 (원)</label><input type="text" id="c_gc" value="453,640,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>기타관리비 (원)</label><input type="text" id="c_oc" value="350,000,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+  </div>
+  <div class="st">원료 단가 (현재)</div>
+  <div class="g3">
+    <div class="ig"><label>원료+방사 (원/kg)</label><input type="text" id="c_mk" value="3200" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>매입단가 — 210합 (원/m²)</label><input type="text" id="c_pp1" value="1063.8" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="ig"><label>매입단가 — 60결망 (원/m²)</label><input type="text" id="c_pp2" value="750" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+  </div>
+  <div class="smry">
+    <div class="sc">
+      <div class="sl">기준 마진율 (전체)</div>
+      <div class="sv" id="cs-base">-</div>
+      <div class="sd" id="cs-base-detail">매출 -<br>이윤 -</div>
+    </div>
+    <div class="sc">
+      <div class="sl">현재 마진율 (단가 고정)</div>
+      <div class="sv" id="cs-cur">-</div>
+      <div class="sd" id="cs-cur-detail">매출 -<br>이윤 -</div>
+    </div>
+    <div class="sc">
+      <div class="sl">하락폭</div>
+      <div class="sv" id="cs-delta">-</div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 역산 -->
+<div id="tc-rev" class="tc">
+  <div class="note"><strong>역산 공식: 필요단가 = 현재원가 ÷ (1 − 기준마진율)</strong> &nbsp;|&nbsp; ★ 입력 단가 입력 시 해당 마진율 및 총매출·총이윤이 실시간 반영됩니다</div>
+  <div class="tbl-wrap"><table>
+    <thead>
+      <tr>
+        <th rowspan="2">품목</th>
+        <th rowspan="2">단위</th>
+        <th rowspan="2" class="ti">판매량</th>
+        <th rowspan="2" class="ti">기준 단가</th>
+        <th rowspan="2" class="ti">기준 마진율</th>
+        <th rowspan="2" style="width:18px"></th>
+        <th rowspan="2" class="ti">현재 마진율</th>
+        <th colspan="2" class="ti" style="background:#eef2ff;border-bottom:1px solid #c7d7f8">역산 (자동)</th>
+        <th colspan="2" class="ti" style="background:#ecfdf5;border-bottom:1px solid #a7f3d0">직접 입력</th>
+        <th rowspan="2" class="ti">총매출</th>
+        <th rowspan="2" class="ti">총이윤</th>
+      </tr>
+      <tr>
+        <th class="ti" style="background:#eef2ff">★ 필요 단가</th>
+        <th class="ti" style="background:#eef2ff">인상폭(%)</th>
+        <th class="ti" style="background:#ecfdf5">★ 입력 단가</th>
+        <th class="ti" style="background:#ecfdf5">입력 마진율</th>
+      </tr>
+    </thead>
+    <tbody id="rev-tbody"></tbody>
+  </table></div>
+  <div id="rev-smry" class="smry" style="display:none;margin-top:16px">
+    <div class="sc">
+      <div class="sl">기준 마진율 (전체)</div>
+      <div class="sv" id="rs-base">-</div>
+      <div class="sd" id="rs-base-detail">매출 -<br>이윤 -</div>
+    </div>
+    <div class="sc">
+      <div class="sl">현재 마진율 (기준단가 고정)</div>
+      <div class="sv" id="rs-cur">-</div>
+      <div class="sd" id="rs-cur-detail">매출 -<br>이윤 -</div>
+    </div>
+    <div class="sc" style="border:1px solid #a7f3d0;background:#f0fdf4">
+      <div class="sl">직접입력 마진율</div>
+      <div class="sv" id="rs-cust">-</div>
+      <div class="sd" id="rs-cust-detail">매출 -<br>이윤 -</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fmtInput(el){
+  const v=el.value.replace(/,/g,'');
+  if(v===''||isNaN(+v))return;
+  el.value=(+v).toLocaleString('ko-KR');
+}
+function unFmtInput(el){
+  el.value=el.value.replace(/,/g,'');
+}
+const PR=[
+  {id:1, name:'40*50',                  ch:'fil',m2f:721, kgf:113, qty:36050,  ppk:null, bPrice:800000,bRate:null,custPrice:null},
+  {id:5, name:'80*80',                  ch:'fil',m2f:560, kgf:110, qty:56000,  ppk:null, bPrice:800000,bRate:null,custPrice:null},
+  {id:8, name:'60*80',                  ch:'fil',m2f:840, kgf:125, qty:50400,  ppk:null, bPrice:860000,bRate:null,custPrice:null},
+  {id:2, name:'40*50',                  ch:'asm',m2f:1442,kgf:226, qty:657391, ppk:null, bPrice:1800,  bRate:null,custPrice:null},
+  {id:3, name:'40*43',                  ch:'asm',m2f:1306,kgf:120, qty:12833,  ppk:null, bPrice:2050,  bRate:null,custPrice:null},
+  {id:4, name:'48*50',                  ch:'asm',m2f:1470,kgf:120, qty:57020,  ppk:null, bPrice:2050,  bRate:null,custPrice:null},
+  {id:6, name:'80*80',                  ch:'asm',m2f:1120,kgf:220, qty:120407, ppk:null, bPrice:2050,  bRate:null,custPrice:null},
+  {id:7, name:'80*80 (태흥)',           ch:'asm',m2f:1120,kgf:220, qty:91252,  ppk:null, bPrice:2000,  bRate:null,custPrice:null},
+  {id:9, name:'60*80',                  ch:'asm',m2f:1680,kgf:250, qty:28900,  ppk:null, bPrice:1750,  bRate:null,custPrice:null},
+  {id:10,name:'60*80 (태흥)',           ch:'asm',m2f:1680,kgf:250, qty:44297,  ppk:null, bPrice:1700,  bRate:null,custPrice:null},
+  {id:11,name:'80*200',                 ch:'asm',m2f:1176,kgf:110, qty:16623,  ppk:null, bPrice:1500,  bRate:null,custPrice:null},
+  {id:12,name:'210합 100*1000',         ch:'pur',m2f:null,kgf:null,qty:42820,  ppk:'pp1',bPrice:1900, bRate:null,custPrice:null},
+  {id:13,name:'210합 100*1000 (태흥)', ch:'pur',m2f:null,kgf:null,qty:100289, ppk:'pp1',bPrice:1850, bRate:null,custPrice:null},
+  {id:14,name:'60결망',                 ch:'pur',m2f:null,kgf:null,qty:7708,   ppk:'pp2',bPrice:1750, bRate:null,custPrice:null},
+];
+
+const CHL     ={fil:'필판매',    asm:'조립판매', pur:'매입조립'};
+const UNIT    ={fil:'원/필',     asm:'원/m²',   pur:'원/m²'};
+const GRP_LABEL={fil:'▸ 필 판매',asm:'▸ 조립 판매 (자체생산)',pur:'▸ 매입 후 조립'};
+let locked=false;
+
+const gv=id=>+(document.getElementById(id)?.value?.replace(/,/g,'')||0);
+
+function getR(p){
+  return{
+    mpm:gv(p+'_mc')/(gv(p+'_tp')||1),
+    apm:gv(p+'_ac')/(gv(p+'_ta')||1),
+    gpm:gv(p+'_gc')/(gv(p+'_ta')||1),
+    opm:gv(p+'_oc')/(gv(p+'_tb')||1),
+    mpk:gv(p+'_mk'), pp1:gv(p+'_pp1'), pp2:gv(p+'_pp2')
+  };
+}
+
+function getPP(p,r){return p.ppk==='pp1'?r.pp1:p.ppk==='pp2'?r.pp2:0;}
+
+function cpu(p,r){
+  if(p.ch==='fil') return r.mpk*p.kgf + (r.mpm+r.opm)*p.m2f;
+  if(p.ch==='asm') return r.mpk*(p.kgf/p.m2f) + r.mpm + r.apm + r.gpm + r.opm;
+  return getPP(p,r) + r.apm + r.gpm + r.opm;
+}
+
+function rawMatCost(p,r){
+  if(p.ch==='fil') return r.mpk * p.kgf * fcnt(p);
+  if(p.ch==='asm') return r.mpk * (p.kgf/p.m2f) * p.qty;
+  return null;
+}
+
+function fcnt(p){return p.ch==='fil' ? p.qty/p.m2f : p.qty;}
+
+const mr =(price,cost)=>price>0?(price-cost)/price:0;
+const fr =r=>(r*100).toFixed(1)+'%';
+const mc =r=>r>=0.15?'pos':r>=0.05?'warn':'neg';
+const fw =n=>{
+  const a=Math.abs(n);
+  const s=a>=100000000?(a/100000000).toFixed(1)+'억':a>=10000?Math.round(a/10000).toLocaleString()+'만':Math.round(a).toLocaleString();
+  return(n<0?'-':'')+s+'원';
+};
+const fq =p=>p.ch==='fil'?Math.round(p.qty/p.m2f).toLocaleString()+'필':p.qty.toLocaleString()+'m²';
+
+function addGroupHdr(tb,ch,cols){
+  const tr=document.createElement('tr');
+  tr.className='group-hdr '+ch;
+  tr.innerHTML=`<td colspan="${cols}">${GRP_LABEL[ch]}</td>`;
+  tb.appendChild(tr);
+}
+
+function addSubtotalBase(tb,label,ts,tp,cols){
+  const rate=ts>0?tp/ts:0;
+  const tr=document.createElement('tr');
+  tr.className='subtotal';
+  tr.innerHTML=`<td colspan="${cols-3}" class="ti" style="color:#555">${label} 소계</td>
+    <td class="ti">${fw(ts)}</td>
+    <td class="ti ${mc(rate)}">${fw(tp)}</td>
+    <td class="ti ${mc(rate)}">${fr(rate)}</td>`;
+  tb.appendChild(tr);
+}
+
+function addTotalRowBase(tb,ts,tp,cols){
+  const rate=ts>0?tp/ts:0;
+  const tr=document.createElement('tr');
+  tr.className='total-row';
+  tr.innerHTML=`<td colspan="${cols-3}">전체 합계</td>
+    <td class="ti">${fw(ts)}</td>
+    <td class="ti">${fw(tp)}</td>
+    <td class="ti">${fr(rate)}</td>`;
+  tb.appendChild(tr);
+}
+
+function calcBase(){
+  const r=getR('b'),tb=document.getElementById('base-tbody');
+  tb.innerHTML='';
+  const COLS=9;
+  let prevCh=null,chTS=0,chTP=0,allTS=0,allTP=0;
+
+  PR.forEach((p,i)=>{
+    if(p.ch!==prevCh){
+      if(prevCh!==null) addSubtotalBase(tb,CHL[prevCh],chTS,chTP,COLS);
+      addGroupHdr(tb,p.ch,COLS);
+      chTS=0;chTP=0;prevCh=p.ch;
+    }
+    const cost=cpu(p,r);
+    const rate=mr(p.bPrice,cost);
+    const ts=p.bPrice*fcnt(p);
+    const tp=(p.bPrice-cost)*fcnt(p);
+    const rawC=rawMatCost(p,r);
+    chTS+=ts;chTP+=tp;allTS+=ts;allTP+=tp;
+
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${p.name}</td>
+      <td style="color:#aaa">${UNIT[p.ch]}</td>
+      <td class="ti" style="color:#888">${fq(p)}</td>
+      <td class="ti" style="color:#1a56db;font-size:11px">${rawC!==null?fw(rawC):'-'}</td>
+      <td class="ti">
+        <input type="text" value="${p.bPrice.toLocaleString('ko-KR')}"
+          style="width:90px;text-align:right;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-size:12px;"
+          onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="PR[${i}].bPrice=+(this.value.replace(/,/g,''))||0;calcBase()">
+      </td>
+      <td class="ti" style="color:#888">${Math.round(cost).toLocaleString()}</td>
+      <td class="ti">${fw(ts)}</td>
+      <td class="ti ${tp<0?'neg':''}">${fw(tp)}</td>
+      <td class="ti ${mc(rate)}">${fr(rate)}</td>`;
+    tb.appendChild(tr);
+  });
+
+  if(prevCh) addSubtotalBase(tb,CHL[prevCh],chTS,chTP,COLS);
+  addTotalRowBase(tb,allTS,allTP,COLS);
+}
+
+function lockBase(){
+  const r=getR('b');
+  PR.forEach(p=>{ p.bRate=mr(p.bPrice,cpu(p,r)); });
+  locked=true;
+  document.getElementById('lock-status').innerHTML='<span style="color:#057a55;font-weight:600">✓ 잠금 완료</span>';
+  calcCur();
+}
+
+function calcCur(){
+  if(!locked)return;
+  const rb=getR('b'),rc=getR('c');
+  let bTS=0,bTM=0,cTS=0,cTM=0;
+  PR.forEach(p=>{
+    const f=fcnt(p);
+    bTS+=p.bPrice*f; bTM+=(p.bPrice-cpu(p,rb))*f;
+    cTS+=p.bPrice*f; cTM+=(p.bPrice-cpu(p,rc))*f;
+  });
+  const bR=bTS>0?bTM/bTS:0, cR=cTS>0?cTM/cTS:0, dR=cR-bR;
+
+  const set=(id,t,cls)=>{const el=document.getElementById(id);el.textContent=t;el.className='sv '+cls;};
+  set('cs-base', fr(bR), mc(bR));
+  set('cs-cur',  fr(cR), mc(cR));
+  set('cs-delta',(dR>=0?'+':'')+fr(dR), dR>=0?'pos':'neg');
+
+  document.getElementById('cs-base-detail').innerHTML=`매출 ${fw(bTS)}<br>이윤 ${fw(bTM)}`;
+  document.getElementById('cs-cur-detail').innerHTML =`매출 ${fw(cTS)}<br>이윤 ${fw(cTM)}`;
+
+  showRev();
+}
+
+function showRev(){
+  if(!locked)return;
+  const rc=getR('c'), tb=document.getElementById('rev-tbody');
+  tb.innerHTML='';
+  const COLS=13;
+  let prevCh=null, chTS=0, chTP=0, allTS=0, allTP=0;
+  let bRevTS=0,bRevTP=0, cRevTS=0,cRevTP=0;
+
+  PR.forEach(p=>{
+    if(p.ch!==prevCh){
+      if(prevCh!==null){
+        const rate=chTS>0?chTP/chTS:0;
+        const tr=document.createElement('tr');tr.className='subtotal';
+        tr.innerHTML=`<td colspan="6" class="ti" style="color:#555">${CHL[prevCh]} 소계</td>
+          <td class="ti ${mc(rate)}">${fr(rate)}</td>
+          <td colspan="4"></td>
+          <td class="ti">${fw(chTS)}</td>
+          <td class="ti ${rate<0?'neg':mc(rate)}">${fw(chTP)}</td>`;
+        tb.appendChild(tr);
+        chTS=0;chTP=0;
+      }
+      addGroupHdr(tb,p.ch,COLS);
+      prevCh=p.ch;
+    }
+
+    const cCost=cpu(p,rc);
+    const cRate=mr(p.bPrice,cCost);
+    const bRate=p.bRate;
+
+    const effP = p.custPrice || p.bPrice;
+    const ts = effP * fcnt(p);
+    const tp = (effP - cCost) * fcnt(p);
+    chTS+=ts; chTP+=tp; allTS+=ts; allTP+=tp;
+
+    bRevTS += p.bPrice*fcnt(p);
+    if(bRate!==null) bRevTP += bRate*p.bPrice*fcnt(p);
+    cRevTS += p.bPrice*fcnt(p);
+    cRevTP += (p.bPrice-cCost)*fcnt(p);
+
+    let need=null, iAmt=null, iPct=null;
+    if(bRate!==null && bRate<1){
+      need=cCost/(1-bRate);
+      iAmt=need-p.bPrice;
+      iPct=p.bPrice>0?iAmt/p.bPrice:0;
+    }
+    const dropped = bRate!==null && cRate<bRate-0.001;
+    const custRate = p.custPrice ? mr(p.custPrice,cCost) : null;
+
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${p.name}</td>
+      <td style="color:#aaa;font-size:11px">${UNIT[p.ch]}</td>
+      <td class="ti" style="color:#888">${fq(p)}</td>
+      <td class="ti" style="color:#888">${p.bPrice.toLocaleString()}</td>
+      <td class="ti ${bRate!==null?mc(bRate):''}">${bRate!==null?fr(bRate):'-'}</td>
+      <td style="text-align:center;color:#e02424">${dropped?'↓':''}</td>
+      <td class="ti ${mc(cRate)}">${fr(cRate)}</td>
+      <td class="ti bold" style="background:#f8f9ff">${need!==null?Math.round(need).toLocaleString():'-'}</td>
+      <td class="ti ${iPct!==null?(iPct>0?'dup':'ddn'):''}" style="background:#f8f9ff">${iPct!==null?(iPct>0?'+':'')+fr(iPct):'-'}</td>
+      <td style="background:#f0fdf4" class="ti">
+        <input type="text" placeholder="단가 입력" value="${p.custPrice ? p.custPrice.toLocaleString('ko-KR') : ''}"
+          data-pid="${p.id}"
+          style="width:88px;text-align:right;border:1px solid #a7f3d0;border-radius:4px;padding:4px 6px;font-size:12px;background:#fff;"
+          oninput="onCustInput(${p.id},+(this.value.replace(/,/g,''))||null)">
+      </td>
+      <td id="cr-${p.id}" class="ti ${custRate!==null?mc(custRate):''}" style="background:#f0fdf4;font-weight:600">
+        ${custRate!==null?fr(custRate):'-'}
+      </td>
+      <td id="rts-${p.id}" class="ti">${fw(ts)}</td>
+      <td id="rtp-${p.id}" class="ti ${tp<0?'neg':''}">${fw(tp)}</td>`;
+    tb.appendChild(tr);
+  });
+
+  if(prevCh){
+    const rate=chTS>0?chTP/chTS:0;
+    const tr=document.createElement('tr');tr.className='subtotal';
+    tr.innerHTML=`<td colspan="6" class="ti" style="color:#555">${CHL[prevCh]} 소계</td>
+      <td class="ti ${mc(rate)}">${fr(rate)}</td>
+      <td colspan="4"></td>
+      <td class="ti">${fw(chTS)}</td>
+      <td class="ti ${rate<0?'neg':mc(rate)}">${fw(chTP)}</td>`;
+    tb.appendChild(tr);
+  }
+
+  const totRate=allTS>0?allTP/allTS:0;
+  const totTr=document.createElement('tr');totTr.className='total-row';
+  totTr.innerHTML=`<td colspan="6">전체 합계</td>
+    <td class="ti">${fr(totRate)}</td>
+    <td colspan="4"></td>
+    <td class="ti">${fw(allTS)}</td>
+    <td class="ti">${fw(allTP)}</td>`;
+  tb.appendChild(totTr);
+
+  refreshRevSummary(bRevTS,bRevTP,cRevTS,cRevTP,allTS,allTP);
+}
+
+function refreshRevSummary(bRevTS,bRevTP,cRevTS,cRevTP,allTS,allTP){
+  const smry=document.getElementById('rev-smry');
+  smry.style.display='grid';
+
+  const bR=bRevTS>0?bRevTP/bRevTS:0;
+  const cR=cRevTS>0?cRevTP/cRevTS:0;
+  const dR=allTS>0?allTP/allTS:0;
+
+  const setSC=(svId,cls,val,detId,det)=>{
+    const sv=document.getElementById(svId);
+    sv.textContent=val; sv.className='sv '+cls;
+    document.getElementById(detId).innerHTML=det;
+  };
+  setSC('rs-base', mc(bR), fr(bR), 'rs-base-detail', `매출 ${fw(bRevTS)}<br>이윤 ${fw(bRevTP)}`);
+  setSC('rs-cur',  mc(cR), fr(cR), 'rs-cur-detail',  `매출 ${fw(cRevTS)}<br>이윤 ${fw(cRevTP)}`);
+  setSC('rs-cust', mc(dR), fr(dR), 'rs-cust-detail', `매출 ${fw(allTS)}<br>이윤 ${fw(allTP)}`);
+}
+
+function onCustInput(pid, val){
+  const p=PR.find(x=>x.id===pid);
+  p.custPrice = val || null;
+
+  const activeEl = document.activeElement;
+  const curVal = activeEl?.value ?? '';
+
+  showRev();
+
+  const restored = document.querySelector(`input[data-pid="${pid}"]`);
+  if(restored){
+    const v = restored.value;
+    restored.focus();
+    restored.value = '';
+    restored.value = v;
+  }
+}
+
+function sw(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
+  document.getElementById('tc-'+name).classList.add('on');
+  if(name==='rev') showRev();
+}
+
+const SUPA_URL='https://xfmakrbjiyhgqeycbpiu.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmbWFrcmJqaXloZ3FleWNicGl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzOTYwMjQsImV4cCI6MjA5MTk3MjAyNH0.TDCnbN72YAkWsRxEHgQby93udbnIcpTR5j5YMu5NLB0';
+const SUPA_HDR={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
+
+async function saveAll(){
+  const keys=['tp','ta','tb','mc','ac','gc','oc','mk','pp1','pp2'];
+  const bp={},cp={};
+  keys.forEach(k=>{bp[k]=gv('b_'+k);cp[k]=gv('c_'+k);});
+  const body=JSON.stringify({
+    id:'singleton',
+    params:{bParams:bp,cParams:cp},
+    products:PR.map(p=>({id:p.id,bPrice:p.bPrice,bRate:p.bRate,custPrice:p.custPrice})),
+    locked,
+    updated_at:new Date().toISOString()
+  });
+  const b=document.getElementById('savebtn');
+  b.textContent='저장 중...';
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/costing_data',{
+      method:'POST',
+      headers:{...SUPA_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body
+    });
+    b.textContent=res.ok?'저장됨 ✓':'저장 실패 ✗';
+  }catch(e){ b.textContent='저장 실패 ✗'; }
+  setTimeout(()=>b.textContent='저장',1800);
+}
+
+async function loadAll(){
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/costing_data?id=eq.singleton&select=*',{
+      headers:SUPA_HDR
+    });
+    if(!res.ok)return;
+    const rows=await res.json();
+    if(!rows.length||!rows[0].params)return;
+    const d=rows[0];
+    const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null){el.value=v;if(el.type==='text')fmtInput(el);}};
+    ['tp','ta','tb','mc','ac','gc','oc','mk','pp1','pp2'].forEach(k=>{
+      sv('b_'+k,d.params.bParams[k]); sv('c_'+k,d.params.cParams[k]);
+    });
+    d.products.forEach(s=>{
+      const p=PR.find(x=>x.id===s.id);
+      if(p){p.bPrice=s.bPrice;p.bRate=s.bRate;p.custPrice=s.custPrice||null;}
+    });
+    if(d.locked){
+      locked=true;
+      document.getElementById('lock-status').innerHTML='<span style="color:#057a55;font-weight:600">✓ 잠금 완료</span>';
+    }
+  }catch(e){}
+}
+
+const BIG_IDS=['b_tp','b_ta','b_tb','b_mc','b_ac','b_gc','b_oc','b_mk','b_pp1','b_pp2','c_tp','c_ta','c_tb','c_mc','c_ac','c_gc','c_oc','c_mk','c_pp1','c_pp2'];
+function fmtAllStatic(){BIG_IDS.forEach(id=>{const el=document.getElementById(id);if(el)fmtInput(el);});}
+(async()=>{ await loadAll(); fmtAllStatic(); calcBase(); if(locked) calcCur(); })();
+</script>
+</body>
+</html>

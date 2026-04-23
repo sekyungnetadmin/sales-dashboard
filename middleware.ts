@@ -5,7 +5,11 @@ export default function middleware(req: NextRequest) {
   const auth = req.cookies.get("auth")?.value;
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/login") || pathname.startsWith("/api/auth")) {
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/costing")   // ← 추가
+  ) {
     return NextResponse.next();
   }
 

@@ -13,7 +13,7 @@ interface Row {
   year: number;
   month: number;
   amount: number;
-  company: string;  // ← 추가
+  company: string;
 }
 
 interface MonthModal {
@@ -91,8 +91,8 @@ export default function Dashboard() {
       if (!name || !dateStr || isNaN(amount)) return;
       const date = new Date(dateStr.replace(/\./g, "-"));
       if (isNaN(date.getTime())) return;
-     const company = (r["업체명"] || "세경네트").trim();
-     rows.push({ name, date, year: date.getFullYear(), month: date.getMonth() + 1, amount, company });
+      const company = (r["업체명"] || "세경네트").trim();
+      rows.push({ name, date, year: date.getFullYear(), month: date.getMonth() + 1, amount, company });
     });
     setData(rows);
     setActiveYear("all");
@@ -120,20 +120,18 @@ export default function Dashboard() {
   }), [data, activeYear, activeClient, activeCompany]);
 
   const companyFiltered = useMemo(() =>
-  activeCompany === "all" ? data : data.filter(d => d.company === activeCompany),
-[data, activeCompany]);
+    activeCompany === "all" ? data : data.filter(d => d.company === activeCompany),
+  [data, activeCompany]);
 
   const years = useMemo(() => [...new Set(data.map(d => d.year))].sort(), [data]);
   const allClients = useMemo(() => [...new Set(data.map(d => d.name))].sort(), [data]);
 
-  // KPI
   const total = filtered.reduce((s, d) => s + d.amount, 0);
   const count = filtered.length;
   const clients = new Set(filtered.map(d => d.name)).size;
   const months = new Set(filtered.map(d => `${d.year}-${d.month}`)).size || 1;
   const avg = total / months;
 
-  // 전년 대비
   const currentYear = activeYear === "all" ? Math.max(...(years.length ? years : [0])) : activeYear as number;
   const prevYear = currentYear - 1;
   const currentTotal = companyFiltered.filter(d => d.year === currentYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
@@ -144,7 +142,6 @@ export default function Dashboard() {
     ? `${growthRate >= 0 ? "▲" : "▼"} 전년比 ${Math.abs(growthRate).toFixed(1)}%`
     : "전년 데이터 없음";
 
-  // 월별 추이
   const activeYears = activeYear === "all" ? years : [prevYear, activeYear as number].filter(y => years.includes(y) || y === activeYear);
 
   const trendData = useMemo(() => {
@@ -152,26 +149,25 @@ export default function Dashboard() {
     return Array.from({ length: 12 }, (_, m) => {
       const obj: any = { month: `${m + 1}월` };
       chartYears.forEach(y => {
-        const cf = activeClient === "all" ? companyFiltered  : companyFiltered.filter(d => d.name === activeClient);
+        const cf = activeClient === "all" ? companyFiltered : companyFiltered.filter(d => d.name === activeClient);
         obj[`${y}년`] = cf.filter(d => d.year === y && d.month === m + 1).reduce((s, d) => s + d.amount, 0);
       });
       return obj;
     });
-  }, [data, years, activeYear, activeClient, prevYear, , activeCompany, companyFiltered]);
+  }, [data, years, activeYear, activeClient, prevYear, activeCompany, companyFiltered]);
 
-  // 분기별
   const quarterYears = activeYear === "all" ? years : [prevYear, activeYear as number];
   const quarterData = useMemo(() => {
     const qLabels = ["1분기", "2분기", "3분기", "4분기"];
     return qLabels.map((q, qi) => {
       const obj: any = { quarter: q };
       quarterYears.forEach(y => {
-        const cf = activeClient === "all" ? companyFiltered  : companyFiltered.filter(d => d.name === activeClient);
+        const cf = activeClient === "all" ? companyFiltered : companyFiltered.filter(d => d.name === activeClient);
         obj[`${y}년`] = cf.filter(d => d.year === y && d.month >= qi * 3 + 1 && d.month <= qi * 3 + 3).reduce((s, d) => s + d.amount, 0);
       });
       return obj;
     });
-  }, [data, years, activeYear, activeClient, , activeCompany, companyFiltered]);
+  }, [data, years, activeYear, activeClient, activeCompany, companyFiltered]);
 
   const pieData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -237,31 +233,52 @@ export default function Dashboard() {
       )}
 
       {/* 탑바 */}
-      <div style={{ display: "flex", alignItems: "center", padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#0f1117", position: "sticky", top: 0, zIndex: 100, gap: 16 }}>
-        <span style={{ fontFamily: "monospace", fontSize: 12, letterSpacing: 3, color: "#4f8ef7", fontWeight: 600 }}>SEKYUNG</span>
-        <span style={{ color: "#5a5f78", fontSize: 14 }}>매출 대시보드</span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#0f1117", position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ fontFamily: "monospace", fontSize: 12, letterSpacing: 3, color: "#4f8ef7", fontWeight: 600 }}>SEKYUNG</span>
+          <span style={{ color: "#5a5f78", fontSize: 14 }}>매출 대시보드</span>
+        </div>
+        <a
+          href="/costing/index.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: "7px 16px",
+            background: "rgba(79,142,247,0.15)",
+            border: "1px solid rgba(79,142,247,0.4)",
+            color: "#4f8ef7",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: "none",
+            fontFamily: "Noto Sans KR, sans-serif",
+            letterSpacing: 0.5,
+          }}
+        >
+          원가계산 →
+        </a>
       </div>
 
       {/* 필터 바 */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#181c27", flexWrap: "wrap" }}>
         {(["all", "세경네트", "한두산업"] as const).map(co => (
-  <button
-    key={co}
-    onClick={() => setActiveCompany(co)}
-    style={{
-      padding: "7px 16px",
-      borderRadius: 8,
-      border: "1px solid",
-      borderColor: activeCompany === co ? "#4f8ef7" : "rgba(255,255,255,0.12)",
-      background: activeCompany === co ? "rgba(79,142,247,0.15)" : "transparent",
-      color: activeCompany === co ? "#4f8ef7" : "#8b90a8",
-      fontSize: 13, fontWeight: 600, cursor: "pointer",
-      fontFamily: "Noto Sans KR, sans-serif",
-    }}
-  >
-    {co === "all" ? "전체 합산" : co}
-  </button>
-))}
+          <button
+            key={co}
+            onClick={() => setActiveCompany(co)}
+            style={{
+              padding: "7px 16px",
+              borderRadius: 8,
+              border: "1px solid",
+              borderColor: activeCompany === co ? "#4f8ef7" : "rgba(255,255,255,0.12)",
+              background: activeCompany === co ? "rgba(79,142,247,0.15)" : "transparent",
+              color: activeCompany === co ? "#4f8ef7" : "#8b90a8",
+              fontSize: 13, fontWeight: 600, cursor: "pointer",
+              fontFamily: "Noto Sans KR, sans-serif",
+            }}
+          >
+            {co === "all" ? "전체 합산" : co}
+          </button>
+        ))}
         <span style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1, fontWeight: 600 }}>연도</span>
         <select value={activeYear} onChange={e => setActiveYear(e.target.value === "all" ? "all" : Number(e.target.value))} style={selectStyle}>
           <option value="all">전체</option>
