@@ -65,6 +65,16 @@ export default function Dashboard() {
   const [activeClient, setActiveClient] = useState<string>("all");
   const [monthModal, setMonthModal] = useState<MonthModal | null>(null);
   const [activeCompany, setActiveCompany] = useState<"all"|"세경네트"|"한두산업">("all");
+  const [windowWidth, setWindowWidth] = useState(1200);
+
+  useEffect(() => {
+    const update = () => setWindowWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const isMobile = windowWidth < 640;
 
   useEffect(() => {
     fetch("/api/sales")
@@ -233,15 +243,13 @@ export default function Dashboard() {
       )}
 
       {/* 탑바 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#0f1117", position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#0f1117", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontFamily: "monospace", fontSize: 12, letterSpacing: 3, color: "#4f8ef7", fontWeight: 600 }}>SEKYUNG</span>
           <span style={{ color: "#5a5f78", fontSize: 14 }}>매출 대시보드</span>
         </div>
         <a
           href="/costing/index.html"
-         
-          rel="noopener noreferrer"
           style={{
             padding: "7px 16px",
             background: "rgba(79,142,247,0.15)",
@@ -260,7 +268,7 @@ export default function Dashboard() {
       </div>
 
       {/* 필터 바 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#181c27", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: isMobile ? "10px 12px" : "14px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#181c27", flexWrap: "wrap" }}>
         {(["all", "세경네트", "한두산업"] as const).map(co => (
           <button
             key={co}
@@ -298,10 +306,10 @@ export default function Dashboard() {
       </div>
 
       {/* 메인 */}
-      <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, maxWidth: 1400, margin: "0 auto" }}>
+      <div style={{ padding: isMobile ? "12px" : "24px 28px", display: "flex", flexDirection: "column", gap: 20, maxWidth: 1400, margin: "0 auto" }}>
 
         {/* KPI */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 16 }}>
           <div style={{ ...cardStyle, borderTop: "2px solid #4f8ef7" }}>
             <p style={{ fontSize: 11, color: "#5a5f78", letterSpacing: 1.5, fontWeight: 600, marginBottom: 12 }}>총 매출 (공급가액)</p>
             <p style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 600, color: "#e8eaf2", marginBottom: 4 }}>{fmt(total)}</p>
@@ -331,7 +339,7 @@ export default function Dashboard() {
             <p style={{ fontSize: 14, fontWeight: 600 }}>📈 월별 매출 추이</p>
             <p style={{ fontSize: 11, color: "#5a5f78" }}>월 클릭 → 거래처 상세</p>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
             <LineChart data={trendData} onClick={handleChartClick} style={{ cursor: "pointer" }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="month" tick={{ fill: "#5a5f78", fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -354,7 +362,7 @@ export default function Dashboard() {
         {/* 분기별 매출 */}
         <div style={cardStyle}>
           <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>📆 분기별 매출</p>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={isMobile ? 180 : 220}>
             <BarChart data={quarterData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="quarter" tick={{ fill: "#8b90a8", fontSize: 13 }} axisLine={false} tickLine={false} />
@@ -375,7 +383,7 @@ export default function Dashboard() {
         </div>
 
         {/* 파이 + 연도별 바 */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
           <div style={cardStyle}>
             <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>🏢 거래처별 매출 비중</p>
             <ResponsiveContainer width="100%" height={250}>
