@@ -240,7 +240,7 @@ export default function Dashboard() {
         </div>
         <a
           href="/costing/index.html"
-          target="_blank"
+         
           rel="noopener noreferrer"
           style={{
             padding: "7px 16px",
