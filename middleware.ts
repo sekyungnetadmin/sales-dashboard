@@ -8,7 +8,7 @@ export default function middleware(req: NextRequest) {
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/costing")   // ← 추가
+ 
   ) {
     return NextResponse.next();
   }
