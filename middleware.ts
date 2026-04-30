@@ -7,7 +7,7 @@ export default function middleware(req: NextRequest) {
 
   if (
     pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/auth") 
  
   ) {
     return NextResponse.next();
