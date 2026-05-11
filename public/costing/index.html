@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -18,10 +16,15 @@ h1{font-size:16px;font-weight:600;margin-bottom:4px}
 .tc.on{display:block}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .ig{display:flex;flex-direction:column;gap:3px}
 .ig label{font-size:11px;color:#888}
 .ig input{border:1px solid #e0e0e0;border-radius:6px;padding:6px 8px;font-size:12px;width:100%;background:#fafaf8;outline:none}
 .ig input:focus{border-color:#666;background:#fff}
+.raw-group{background:#f0f4ff;border-radius:8px;padding:10px 12px;border:1px solid #dce3f8}
+.raw-group .rg-title{font-size:11px;font-weight:600;color:#3b4fc8;margin-bottom:8px}
+.raw-total{font-size:11px;color:#555;margin-top:6px;text-align:right}
+.raw-total span{font-weight:600;color:#1a1a1a}
 .st{font-size:11px;font-weight:600;color:#555;letter-spacing:.04em;margin:16px 0 8px;text-transform:uppercase}
 .st:first-child{margin-top:0}
 .tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -45,6 +48,7 @@ tr:not(.group-hdr):not(.subtotal):not(.total-row):hover td{background:#fafaf8}
 .sc .sd{font-size:11px;color:#888;margin-top:6px;line-height:1.9}
 .note{font-size:11px;color:#666;padding:8px 10px;background:#f0f4ff;border-radius:6px;margin-bottom:12px;border-left:3px solid #4f7ef8}
 .dup{color:#e02424;font-weight:600}
+.spec-sub{font-size:10px;color:#aaa;margin-top:2px;font-weight:400}
 .ddn{color:#057a55;font-weight:600}
 .lock-btn{padding:8px 20px;font-size:12px;background:#e8f0fe;color:#1a56db;border:1px solid #c5d4f6;border-radius:6px;cursor:pointer;font-weight:600}
 .lock-btn:hover{background:#c5d4f6}
@@ -60,6 +64,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   body{padding:8px}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
   .smry{grid-template-columns:repeat(2,1fr)}
   .smry .sc:last-child{grid-column:span 2}
   .sc .sv{font-size:15px}
@@ -101,9 +106,22 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="ig"><label>관리 인건비 (원)</label><input type="text" id="b_gc" value="453,640,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
     <div class="ig"><label>기타관리비 (원)</label><input type="text" id="b_oc" value="350,000,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
   </div>
-  <div class="st">원료 단가</div>
+  <div class="st">원료 단가 — 기준 시점</div>
   <div class="g3">
-    <div class="ig"><label>원료+방사 (원/kg) — 기준 시점</label><input type="text" id="b_mk" value="2000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
+    <div class="raw-group">
+      <div class="rg-title">원료+방사 단가 (원/kg)</div>
+      <div class="g2">
+        <div class="ig">
+          <label>원료 (원/kg)</label>
+          <input type="text" id="b_mk_mat" value="1,500" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase();updRawTotal('b')">
+        </div>
+        <div class="ig">
+          <label>방사 (원/kg)</label>
+          <input type="text" id="b_mk_spin" value="500" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase();updRawTotal('b')">
+        </div>
+      </div>
+      <div class="raw-total">합계: <span id="b_mk_total">2,000</span> 원/kg</div>
+    </div>
     <div class="ig"><label>매입단가 — 210합 (원/m²)</label><input type="text" id="b_pp1" value="1063.8" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
     <div class="ig"><label>매입단가 — 60결망 (원/m²)</label><input type="text" id="b_pp2" value="750" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcBase()" oninput="calcBase()"></div>
   </div>
@@ -143,9 +161,22 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="ig"><label>관리 인건비 (원)</label><input type="text" id="c_gc" value="453,640,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
     <div class="ig"><label>기타관리비 (원)</label><input type="text" id="c_oc" value="350,000,000" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
   </div>
-  <div class="st">원료 단가 (현재)</div>
+  <div class="st">원료 단가 — 현재</div>
   <div class="g3">
-    <div class="ig"><label>원료+방사 (원/kg)</label><input type="text" id="c_mk" value="3200" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
+    <div class="raw-group">
+      <div class="rg-title">원료+방사 단가 (원/kg)</div>
+      <div class="g2">
+        <div class="ig">
+          <label>원료 (원/kg)</label>
+          <input type="text" id="c_mk_mat" value="2,500" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur();updRawTotal('c')">
+        </div>
+        <div class="ig">
+          <label>방사 (원/kg)</label>
+          <input type="text" id="c_mk_spin" value="500" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur();updRawTotal('c')">
+        </div>
+      </div>
+      <div class="raw-total">합계: <span id="c_mk_total">3,000</span> 원/kg</div>
+    </div>
     <div class="ig"><label>매입단가 — 210합 (원/m²)</label><input type="text" id="c_pp1" value="1063.8" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
     <div class="ig"><label>매입단가 — 60결망 (원/m²)</label><input type="text" id="c_pp2" value="750" onfocus="unFmtInput(this)" onblur="fmtInput(this);calcCur()" oninput="calcCur()"></div>
   </div>
@@ -180,12 +211,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
         <th rowspan="2" class="ti">기준 마진율</th>
         <th rowspan="2" style="width:18px"></th>
         <th rowspan="2" class="ti">현재 마진율</th>
+        <th colspan="3" class="ti" style="background:#fff7ed;border-bottom:1px solid #fed7aa">원가 변동</th>
         <th colspan="2" class="ti" style="background:#eef2ff;border-bottom:1px solid #c7d7f8">역산 (자동)</th>
         <th colspan="2" class="ti" style="background:#ecfdf5;border-bottom:1px solid #a7f3d0">직접 입력</th>
         <th rowspan="2" class="ti">총매출</th>
         <th rowspan="2" class="ti">총이윤</th>
       </tr>
       <tr>
+        <th class="ti" style="background:#fff7ed">기준 원가</th>
+        <th class="ti" style="background:#fff7ed">현재 원가</th>
+        <th class="ti" style="background:#fff7ed">증감</th>
         <th class="ti" style="background:#eef2ff">★ 필요 단가</th>
         <th class="ti" style="background:#eef2ff">인상폭(%)</th>
         <th class="ti" style="background:#ecfdf5">★ 입력 단가</th>
@@ -222,18 +257,26 @@ function fmtInput(el){
 function unFmtInput(el){
   el.value=el.value.replace(/,/g,'');
 }
+
+function updRawTotal(p){
+  const mat=+(document.getElementById(p+'_mk_mat')?.value?.replace(/,/g,'')||0);
+  const spin=+(document.getElementById(p+'_mk_spin')?.value?.replace(/,/g,'')||0);
+  const el=document.getElementById(p+'_mk_total');
+  if(el) el.textContent=(mat+spin).toLocaleString('ko-KR');
+}
+
 const PR=[
-  {id:1, name:'40*50',                  ch:'fil',m2f:721, kgf:113, qty:36050,  ppk:null, bPrice:800000,bRate:null,custPrice:null},
-  {id:5, name:'80*80',                  ch:'fil',m2f:560, kgf:110, qty:56000,  ppk:null, bPrice:800000,bRate:null,custPrice:null},
-  {id:8, name:'60*80',                  ch:'fil',m2f:840, kgf:125, qty:50400,  ppk:null, bPrice:860000,bRate:null,custPrice:null},
-  {id:2, name:'40*50',                  ch:'asm',m2f:1442,kgf:226, qty:657391, ppk:null, bPrice:1800,  bRate:null,custPrice:null},
+  {id:1, name:'40*50',                  ch:'fil',m2f:735, kgf:113, qty:50,     ppk:null, bPrice:800000,bRate:null,custPrice:null},
+  {id:5, name:'80*80',                  ch:'fil',m2f:588, kgf:110, qty:100,    ppk:null, bPrice:800000,bRate:null,custPrice:null},
+  {id:8, name:'60*80',                  ch:'fil',m2f:882, kgf:125, qty:60,     ppk:null, bPrice:860000,bRate:null,custPrice:null},
+  {id:2, name:'40*50',                  ch:'asm',m2f:1470,kgf:226, qty:657391, ppk:null, bPrice:1800,  bRate:null,custPrice:null},
   {id:3, name:'40*43',                  ch:'asm',m2f:1306,kgf:120, qty:12833,  ppk:null, bPrice:2050,  bRate:null,custPrice:null},
   {id:4, name:'48*50',                  ch:'asm',m2f:1470,kgf:120, qty:57020,  ppk:null, bPrice:2050,  bRate:null,custPrice:null},
-  {id:6, name:'80*80',                  ch:'asm',m2f:1120,kgf:220, qty:120407, ppk:null, bPrice:2050,  bRate:null,custPrice:null},
-  {id:7, name:'80*80 (태흥)',           ch:'asm',m2f:1120,kgf:220, qty:91252,  ppk:null, bPrice:2000,  bRate:null,custPrice:null},
-  {id:9, name:'60*80',                  ch:'asm',m2f:1680,kgf:250, qty:28900,  ppk:null, bPrice:1750,  bRate:null,custPrice:null},
-  {id:10,name:'60*80 (태흥)',           ch:'asm',m2f:1680,kgf:250, qty:44297,  ppk:null, bPrice:1700,  bRate:null,custPrice:null},
-  {id:11,name:'80*200',                 ch:'asm',m2f:1176,kgf:110, qty:16623,  ppk:null, bPrice:1500,  bRate:null,custPrice:null},
+  {id:6, name:'80*80',                  ch:'asm',m2f:1176,kgf:220, qty:120407, ppk:null, bPrice:2050,  bRate:null,custPrice:null},
+  {id:7, name:'80*80 (태흥)',           ch:'asm',m2f:1176,kgf:220, qty:91252,  ppk:null, bPrice:2000,  bRate:null,custPrice:null},
+  {id:9, name:'60*80',                  ch:'asm',m2f:1764,kgf:250, qty:28900,  ppk:null, bPrice:1750,  bRate:null,custPrice:null},
+  {id:10,name:'60*80 (태흥)',           ch:'asm',m2f:1764,kgf:250, qty:44297,  ppk:null, bPrice:1700,  bRate:null,custPrice:null},
+  {id:11,name:'80*200',                 ch:'asm',m2f:2940,kgf:220, qty:16623,  ppk:null, bPrice:1500,  bRate:null,custPrice:null},
   {id:12,name:'210합 100*1000',         ch:'pur',m2f:null,kgf:null,qty:42820,  ppk:'pp1',bPrice:1900, bRate:null,custPrice:null},
   {id:13,name:'210합 100*1000 (태흥)', ch:'pur',m2f:null,kgf:null,qty:100289, ppk:'pp1',bPrice:1850, bRate:null,custPrice:null},
   {id:14,name:'60결망',                 ch:'pur',m2f:null,kgf:null,qty:7708,   ppk:'pp2',bPrice:1750, bRate:null,custPrice:null},
@@ -247,12 +290,13 @@ let locked=false;
 const gv=id=>+(document.getElementById(id)?.value?.replace(/,/g,'')||0);
 
 function getR(p){
+  const mpk = gv(p+'_mk_mat') + gv(p+'_mk_spin');
   return{
     mpm:gv(p+'_mc')/(gv(p+'_tp')||1),
     apm:gv(p+'_ac')/(gv(p+'_ta')||1),
     gpm:gv(p+'_gc')/(gv(p+'_ta')||1),
     opm:gv(p+'_oc')/(gv(p+'_tb')||1),
-    mpk:gv(p+'_mk'), pp1:gv(p+'_pp1'), pp2:gv(p+'_pp2')
+    mpk, pp1:gv(p+'_pp1'), pp2:gv(p+'_pp2')
   };
 }
 
@@ -272,6 +316,13 @@ function rawMatCost(p,r){
 
 function fcnt(p){return p.ch==='fil' ? p.qty/p.m2f : p.qty;}
 
+// 품목 스펙 서브텍스트 생성
+function specHtml(p){
+  if(p.ch==='fil')  return `<div class="spec-sub">${p.m2f.toLocaleString()} m²/필 · ${p.kgf} kg/필</div>`;
+  if(p.ch==='asm')  return `<div class="spec-sub">${p.m2f.toLocaleString()} m²/롤 · ${p.kgf} kg/롤</div>`;
+  return '';
+}
+
 const mr =(price,cost)=>price>0?(price-cost)/price:0;
 const fr =r=>(r*100).toFixed(1)+'%';
 const mc =r=>r>=0.15?'pos':r>=0.05?'warn':'neg';
@@ -280,7 +331,9 @@ const fw =n=>{
   const s=a>=100000000?(a/100000000).toFixed(1)+'억':a>=10000?Math.round(a/10000).toLocaleString()+'만':Math.round(a).toLocaleString();
   return(n<0?'-':'')+s+'원';
 };
-const fq =p=>p.ch==='fil'?Math.round(p.qty/p.m2f).toLocaleString()+'필':p.qty.toLocaleString()+'m²';
+const fq =p=>p.ch==='fil'?p.qty.toLocaleString()+'필':p.qty.toLocaleString()+'m²';
+
+function fcnt(p){return p.qty;}  // fil: 필 단위, asm/pur: m² 단위
 
 function addGroupHdr(tb,ch,cols){
   const tr=document.createElement('tr');
@@ -332,7 +385,7 @@ function calcBase(){
 
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${p.name}</td>
+      <td>${p.name}${specHtml(p)}</td>
       <td style="color:#aaa">${UNIT[p.ch]}</td>
       <td class="ti" style="color:#888">${fq(p)}</td>
       <td class="ti" style="color:#1a56db;font-size:11px">${rawC!==null?fw(rawC):'-'}</td>
@@ -384,9 +437,9 @@ function calcCur(){
 
 function showRev(){
   if(!locked)return;
-  const rc=getR('c'), tb=document.getElementById('rev-tbody');
+  const rc=getR('c'), rb=getR('b'), tb=document.getElementById('rev-tbody');
   tb.innerHTML='';
-  const COLS=13;
+  const COLS=16;
   let prevCh=null, chTS=0, chTP=0, allTS=0, allTP=0;
   let bRevTS=0,bRevTP=0, cRevTS=0,cRevTP=0;
 
@@ -397,7 +450,7 @@ function showRev(){
         const tr=document.createElement('tr');tr.className='subtotal';
         tr.innerHTML=`<td colspan="6" class="ti" style="color:#555">${CHL[prevCh]} 소계</td>
           <td class="ti ${mc(rate)}">${fr(rate)}</td>
-          <td colspan="4"></td>
+          <td colspan="7"></td>
           <td class="ti">${fw(chTS)}</td>
           <td class="ti ${rate<0?'neg':mc(rate)}">${fw(chTP)}</td>`;
         tb.appendChild(tr);
@@ -407,7 +460,9 @@ function showRev(){
       prevCh=p.ch;
     }
 
+    const bCost=cpu(p,rb);
     const cCost=cpu(p,rc);
+    const costDelta=cCost-bCost;
     const cRate=mr(p.bPrice,cCost);
     const bRate=p.bRate;
 
@@ -429,16 +484,21 @@ function showRev(){
     }
     const dropped = bRate!==null && cRate<bRate-0.001;
     const custRate = p.custPrice ? mr(p.custPrice,cCost) : null;
+    const deltaClass = costDelta>0?'neg':costDelta<0?'pos':'';
+    const deltaStr = costDelta===0?'-':(costDelta>0?'+':'')+Math.round(costDelta).toLocaleString()+'원';
 
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${p.name}</td>
+      <td>${p.name}${specHtml(p)}</td>
       <td style="color:#aaa;font-size:11px">${UNIT[p.ch]}</td>
       <td class="ti" style="color:#888">${fq(p)}</td>
       <td class="ti" style="color:#888">${p.bPrice.toLocaleString()}</td>
       <td class="ti ${bRate!==null?mc(bRate):''}">${bRate!==null?fr(bRate):'-'}</td>
       <td style="text-align:center;color:#e02424">${dropped?'↓':''}</td>
       <td class="ti ${mc(cRate)}">${fr(cRate)}</td>
+      <td class="ti" style="background:#fff7ed;color:#888">${Math.round(bCost).toLocaleString()}</td>
+      <td class="ti" style="background:#fff7ed;color:#555;font-weight:600">${Math.round(cCost).toLocaleString()}</td>
+      <td class="ti ${deltaClass}" style="background:#fff7ed">${deltaStr}</td>
       <td class="ti bold" style="background:#f8f9ff">${need!==null?Math.round(need).toLocaleString():'-'}</td>
       <td class="ti ${iPct!==null?(iPct>0?'dup':'ddn'):''}" style="background:#f8f9ff">${iPct!==null?(iPct>0?'+':'')+fr(iPct):'-'}</td>
       <td style="background:#f0fdf4" class="ti">
@@ -460,7 +520,7 @@ function showRev(){
     const tr=document.createElement('tr');tr.className='subtotal';
     tr.innerHTML=`<td colspan="6" class="ti" style="color:#555">${CHL[prevCh]} 소계</td>
       <td class="ti ${mc(rate)}">${fr(rate)}</td>
-      <td colspan="4"></td>
+      <td colspan="7"></td>
       <td class="ti">${fw(chTS)}</td>
       <td class="ti ${rate<0?'neg':mc(rate)}">${fw(chTP)}</td>`;
     tb.appendChild(tr);
@@ -470,7 +530,7 @@ function showRev(){
   const totTr=document.createElement('tr');totTr.className='total-row';
   totTr.innerHTML=`<td colspan="6">전체 합계</td>
     <td class="ti">${fr(totRate)}</td>
-    <td colspan="4"></td>
+    <td colspan="7"></td>
     <td class="ti">${fw(allTS)}</td>
     <td class="ti">${fw(allTP)}</td>`;
   tb.appendChild(totTr);
@@ -481,11 +541,9 @@ function showRev(){
 function refreshRevSummary(bRevTS,bRevTP,cRevTS,cRevTP,allTS,allTP){
   const smry=document.getElementById('rev-smry');
   smry.style.display='grid';
-
   const bR=bRevTS>0?bRevTP/bRevTS:0;
   const cR=cRevTS>0?cRevTP/cRevTS:0;
   const dR=allTS>0?allTP/allTS:0;
-
   const setSC=(svId,cls,val,detId,det)=>{
     const sv=document.getElementById(svId);
     sv.textContent=val; sv.className='sv '+cls;
@@ -499,12 +557,7 @@ function refreshRevSummary(bRevTS,bRevTP,cRevTS,cRevTP,allTS,allTP){
 function onCustInput(pid, val){
   const p=PR.find(x=>x.id===pid);
   p.custPrice = val || null;
-
-  const activeEl = document.activeElement;
-  const curVal = activeEl?.value ?? '';
-
   showRev();
-
   const restored = document.querySelector(`input[data-pid="${pid}"]`);
   if(restored){
     const v = restored.value;
@@ -527,9 +580,13 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const SUPA_HDR={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
 
 async function saveAll(){
-  const keys=['tp','ta','tb','mc','ac','gc','oc','mk','pp1','pp2'];
+  const keys=['tp','ta','tb','mc','ac','gc','oc','pp1','pp2'];
   const bp={},cp={};
   keys.forEach(k=>{bp[k]=gv('b_'+k);cp[k]=gv('c_'+k);});
+  // 원료·방사 분리 저장
+  bp.mk_mat=gv('b_mk_mat'); bp.mk_spin=gv('b_mk_spin');
+  cp.mk_mat=gv('c_mk_mat'); cp.mk_spin=gv('c_mk_spin');
+
   const body=JSON.stringify({
     id:'singleton',
     params:{bParams:bp,cParams:cp},
@@ -552,17 +609,22 @@ async function saveAll(){
 
 async function loadAll(){
   try{
-    const res=await fetch(SUPA_URL+'/rest/v1/costing_data?id=eq.singleton&select=*',{
-      headers:SUPA_HDR
-    });
+    const res=await fetch(SUPA_URL+'/rest/v1/costing_data?id=eq.singleton&select=*',{headers:SUPA_HDR});
     if(!res.ok)return;
     const rows=await res.json();
     if(!rows.length||!rows[0].params)return;
     const d=rows[0];
     const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null){el.value=v;if(el.type==='text')fmtInput(el);}};
-    ['tp','ta','tb','mc','ac','gc','oc','mk','pp1','pp2'].forEach(k=>{
+    ['tp','ta','tb','mc','ac','gc','oc','pp1','pp2'].forEach(k=>{
       sv('b_'+k,d.params.bParams[k]); sv('c_'+k,d.params.cParams[k]);
     });
+    // 원료·방사 불러오기 (구버전 호환: mk 단일값이면 mat에 넣고 spin=0)
+    const bp=d.params.bParams, cp=d.params.cParams;
+    if(bp.mk_mat!=null){ sv('b_mk_mat',bp.mk_mat); sv('b_mk_spin',bp.mk_spin??0); }
+    else if(bp.mk!=null){ sv('b_mk_mat',bp.mk); sv('b_mk_spin',0); }
+    if(cp.mk_mat!=null){ sv('c_mk_mat',cp.mk_mat); sv('c_mk_spin',cp.mk_spin??0); }
+    else if(cp.mk!=null){ sv('c_mk_mat',cp.mk); sv('c_mk_spin',0); }
+
     d.products.forEach(s=>{
       const p=PR.find(x=>x.id===s.id);
       if(p){p.bPrice=s.bPrice;p.bRate=s.bRate;p.custPrice=s.custPrice||null;}
@@ -574,9 +636,17 @@ async function loadAll(){
   }catch(e){}
 }
 
-const BIG_IDS=['b_tp','b_ta','b_tb','b_mc','b_ac','b_gc','b_oc','b_mk','b_pp1','b_pp2','c_tp','c_ta','c_tb','c_mc','c_ac','c_gc','c_oc','c_mk','c_pp1','c_pp2'];
+const BIG_IDS=['b_tp','b_ta','b_tb','b_mc','b_ac','b_gc','b_oc','b_mk_mat','b_mk_spin','b_pp1','b_pp2',
+               'c_tp','c_ta','c_tb','c_mc','c_ac','c_gc','c_oc','c_mk_mat','c_mk_spin','c_pp1','c_pp2'];
 function fmtAllStatic(){BIG_IDS.forEach(id=>{const el=document.getElementById(id);if(el)fmtInput(el);});}
-(async()=>{ await loadAll(); fmtAllStatic(); calcBase(); if(locked) calcCur(); })();
+(async()=>{
+  await loadAll();
+  fmtAllStatic();
+  updRawTotal('b');
+  updRawTotal('c');
+  calcBase();
+  if(locked) calcCur();
+})();
 </script>
 </body>
 </html>
