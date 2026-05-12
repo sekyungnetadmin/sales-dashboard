@@ -105,8 +105,8 @@ export default function Dashboard() {
       rows.push({ name, date, year: date.getFullYear(), month: date.getMonth() + 1, amount, company });
     });
     setData(rows);
-    setActiveYear("all");
-    setActiveClient("all");
+    //setActiveYear("all");
+    //setActiveClient("all");
   }
 
   function handleChartClick(dotData: any) {
