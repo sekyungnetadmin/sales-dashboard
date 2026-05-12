@@ -144,12 +144,26 @@ export default function Dashboard() {
 
   const currentYear = activeYear === "all" ? Math.max(...(years.length ? years : [0])) : activeYear as number;
   const prevYear = currentYear - 1;
-  const currentTotal = companyFiltered.filter(d => d.year === currentYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
-  const prevTotal = companyFiltered.filter(d => d.year === prevYear && (activeClient === "all" || d.name === activeClient)).reduce((s, d) => s + d.amount, 0);
+
+  // 현재 연도의 최대 월 구하기
+  const maxMonth = companyFiltered
+    .filter(d => d.year === currentYear)
+    .reduce((max, d) => Math.max(max, d.month), 0);
+
+  const clientCondition = (d: Row) => activeClient === "all" || d.name === activeClient;
+
+  const currentTotal = companyFiltered
+    .filter(d => d.year === currentYear && clientCondition(d))
+    .reduce((s, d) => s + d.amount, 0);
+
+  const prevTotal = companyFiltered
+    .filter(d => d.year === prevYear && d.month <= maxMonth && clientCondition(d))
+    .reduce((s, d) => s + d.amount, 0);
+
   const growthRate = prevTotal > 0 ? ((currentTotal - prevTotal) / prevTotal * 100) : null;
   const growthColor = growthRate !== null ? (growthRate >= 0 ? "#38d9a9" : "#f75f7a") : "#5a5f78";
   const growthStr = growthRate !== null
-    ? `${growthRate >= 0 ? "▲" : "▼"} 전년比 ${Math.abs(growthRate).toFixed(1)}%`
+    ? `${growthRate >= 0 ? "▲" : "▼"} 전년 동기(1~${maxMonth}월)比 ${Math.abs(growthRate).toFixed(1)}%`
     : "전년 데이터 없음";
 
   const activeYears = activeYear === "all" ? years : [prevYear, activeYear as number].filter(y => years.includes(y) || y === activeYear);
