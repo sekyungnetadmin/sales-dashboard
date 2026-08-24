@@ -1,0 +1,15 @@
+{
+  "name": "세경네트 발주접수",
+  "short_name": "발주접수",
+  "start_url": "/orders/test",
+  "display": "standalone",
+  "share_target": {
+    "action": "/api/share-target",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
