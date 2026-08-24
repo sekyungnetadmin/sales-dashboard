@@ -26,13 +26,13 @@ export default function OrdersInboxPage() {
   const [shippingDate, setShippingDate] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function loadOrders() {
-    setLoading(true);
-    const res = await fetch("/api/orders");
-    const data = await res.json();
-    setOrders(data.orders || []);
-    setLoading(false);
-  }
+async function loadOrders() {
+  setLoading(true);
+  const res = await fetch("/api/orders", { cache: "no-store" });
+  const data = await res.json();
+  setOrders(data.orders || []);
+  setLoading(false);
+}
 
   useEffect(() => {
     loadOrders();
@@ -80,7 +80,7 @@ export default function OrdersInboxPage() {
   }
 
 
-  
+
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px", fontFamily: "'Noto Sans KR', sans-serif" }}>
