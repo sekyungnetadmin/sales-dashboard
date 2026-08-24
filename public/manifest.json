@@ -3,6 +3,15 @@
   "short_name": "발주접수",
   "start_url": "/orders/test",
   "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a7a4c",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
   "share_target": {
     "action": "/api/share-target",
     "method": "GET",
