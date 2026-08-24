@@ -9,5 +9,6 @@ export async function GET(request: NextRequest) {
     await supabase.from("orders").insert({ raw_text: text });
   }
 
-  return NextResponse.redirect(new URL("/orders/test?saved=1", request.url));
+  const params = new URLSearchParams({ text, saved: "1" });
+  return NextResponse.redirect(new URL(`/orders/test?${params.toString()}`, request.url));
 }
