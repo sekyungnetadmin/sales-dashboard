@@ -9,8 +9,10 @@ export default function middleware(req: NextRequest) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/orders/test") ||
-    pathname.startsWith("/api/share-target")
- 
+    pathname.startsWith("/api/share-target") ||
+    pathname === "/manifest.json" ||
+    pathname === "/icon-192.png" ||
+    pathname === "/sw.js"
   ) {
     return NextResponse.next();
   }
