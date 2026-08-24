@@ -2,6 +2,7 @@
   "name": "세경네트 발주접수",
   "short_name": "발주접수",
   "start_url": "/orders/test",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a7a4c",
