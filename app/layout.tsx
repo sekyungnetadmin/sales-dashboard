@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ConsentGate from '@/components/ConsentGate';
 
 export const metadata: Metadata = {
   title: "세경 매출 대시보드",
@@ -18,8 +17,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-         <ConsentGate>{children}</ConsentGate>
-        </body>
+        {children}
+      </body>
     </html>
   );
 }
