@@ -28,13 +28,13 @@ export default function OrdersInboxPage() {
   const [shippingDate, setShippingDate] = useState("");
   const [saving, setSaving] = useState(false);
 
-async function loadOrders() {
-  setLoading(true);
-  const res = await fetch("/api/orders", { cache: "no-store" });
-  const data = await res.json();
-  setOrders(data.orders || []);
-  setLoading(false);
-}
+  async function loadOrders() {
+    setLoading(true);
+    const res = await fetch("/api/orders", { cache: "no-store" });
+    const data = await res.json();
+    setOrders(data.orders || []);
+    setLoading(false);
+  }
 
   useEffect(() => {
     loadOrders();
@@ -81,20 +81,40 @@ async function loadOrders() {
     loadOrders();
   }
 
-
-
-
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "'Noto Sans KR', sans-serif", colorScheme: "light", background: "#fafafa", minHeight: "100vh" , color: "#222" }}>
-      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>미처리 주문함</h1>
+    <div
+      style={{
+        maxWidth: 640,
+        margin: "0 auto",
+        padding: "24px 16px 80px",
+        fontFamily: "'Noto Sans KR', sans-serif",
+        colorScheme: "light",
+        background: "#fafafa",
+        minHeight: "100vh",
+        color: "#222",
+      }}
+    >
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4, color: "#222" }}>
+        미처리 주문함
+      </h1>
+
+      <OrdersSummaryBar />
+
       <p style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>
         {loading ? "불러오는 중..." : `${orders.length}건 대기 중`}
       </p>
 
       {!loading && orders.length === 0 && (
-        <div style={{ padding: 40, textAlign: "center", color: "#aaa", border: "1px dashed #ddd", borderRadius: 12 }}>
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center",
+            color: "#aaa",
+            border: "1px dashed #ddd",
+            borderRadius: 12,
+          }}
+        >
           처리할 주문이 없습니다.
-
         </div>
       )}
 
@@ -116,13 +136,17 @@ async function loadOrders() {
             <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>
               {new Date(o.received_at).toLocaleString("ko-KR")}
             </div>
-            <div style={{ fontSize: 14, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{o.raw_text}</div>
+            <div style={{ fontSize: 14, whiteSpace: "pre-wrap", lineHeight: 1.5, color: "#222" }}>
+              {o.raw_text}
+            </div>
           </div>
 
           {openId === o.id && (
             <div style={{ padding: 16, borderTop: "1px solid #eee", background: "#fafafa" }}>
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 4 }}>거래처</label>
+                <label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 4 }}>
+                  거래처
+                </label>
                 {selectedClient ? (
                   <div
                     style={{
@@ -134,8 +158,11 @@ async function loadOrders() {
                       borderRadius: 8,
                     }}
                   >
-                    <span>{selectedClient.company_name}</span>
-                    <button onClick={() => setSelectedClient(null)} style={{ border: "none", background: "none", color: "#888", cursor: "pointer" }}>
+                    <span style={{ color: "#222" }}>{selectedClient.company_name}</span>
+                    <button
+                      onClick={() => setSelectedClient(null)}
+                      style={{ border: "none", background: "none", color: "#888", cursor: "pointer" }}
+                    >
                       변경
                     </button>
                   </div>
@@ -145,15 +172,35 @@ async function loadOrders() {
                       value={clientQuery}
                       onChange={(e) => setClientQuery(e.target.value)}
                       placeholder="거래처명 검색"
-                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 8, boxSizing: "border-box" }}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        border: "1px solid #ddd",
+                        borderRadius: 8,
+                        boxSizing: "border-box",
+                        color: "#222",
+                      }}
                     />
                     {clientResults.length > 0 && (
-                      <div style={{ marginTop: 6, border: "1px solid #eee", borderRadius: 8, maxHeight: 200, overflowY: "auto" }}>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          border: "1px solid #eee",
+                          borderRadius: 8,
+                          maxHeight: 200,
+                          overflowY: "auto",
+                        }}
+                      >
                         {clientResults.map((c) => (
                           <div
                             key={c.id}
                             onClick={() => setSelectedClient(c)}
-                            style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f0f0f0" }}
+                            style={{
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              borderBottom: "1px solid #f0f0f0",
+                              color: "#222",
+                            }}
                           >
                             {c.company_name}
                           </div>
@@ -165,7 +212,9 @@ async function loadOrders() {
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 4 }}>회사</label>
+                <label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 4 }}>
+                  회사
+                </label>
                 <div style={{ display: "flex", gap: 8 }}>
                   {(["세경네트", "한두산업"] as const).map((c) => (
                     <button
@@ -178,6 +227,7 @@ async function loadOrders() {
                         border: company === c ? "2px solid #1a7a4c" : "1px solid #ddd",
                         background: company === c ? "#eafaf1" : "#fff",
                         fontWeight: company === c ? 700 : 400,
+                        color: "#222",
                         cursor: "pointer",
                       }}
                     >
@@ -188,12 +238,21 @@ async function loadOrders() {
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 4 }}>출고예정일</label>
+                <label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 4 }}>
+                  출고예정일
+                </label>
                 <input
                   type="date"
                   value={shippingDate}
                   onChange={(e) => setShippingDate(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 8, boxSizing: "border-box" }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: 8,
+                    boxSizing: "border-box",
+                    color: "#222",
+                  }}
                 />
               </div>
 
@@ -218,7 +277,8 @@ async function loadOrders() {
           )}
         </div>
       ))}
-      <OrdersNav  />
+
+      <OrdersNav />
     </div>
   );
 }
