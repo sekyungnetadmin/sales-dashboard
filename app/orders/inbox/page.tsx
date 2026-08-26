@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import OrdersNav from "@/components/OrdersNav";
+import OrdersSummaryBar from "@/components/OrdersSummaryBar";
 
 type Order = {
   id: string;
@@ -84,7 +85,7 @@ async function loadOrders() {
 
 
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "'Noto Sans KR', sans-serif", colorScheme: "light", background: "#fafafa", minHeight: "100vh" }}>
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "'Noto Sans KR', sans-serif", colorScheme: "light", background: "#fafafa", minHeight: "100vh" , color: "#222" }}>
       <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>미처리 주문함</h1>
       <p style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>
         {loading ? "불러오는 중..." : `${orders.length}건 대기 중`}

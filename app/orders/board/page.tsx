@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import OrdersNav from "@/components/OrdersNav";
+import OrdersSummaryBar from "@/components/OrdersSummaryBar";
 
 type Order = {
   id: string;
@@ -39,9 +40,9 @@ export default function OrdersBoardPage() {
   ];
 
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "'Noto Sans KR', sans-serif" }}>
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "'Noto Sans KR', sans-serif", colorScheme: "light", background: "#fafafa", minHeight: "100vh", color: "#222"  }}>
       <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>출고 현황판</h1>
-
+<OrdersSummaryBar />
       {loading && <p style={{ color: "#888" }}>불러오는 중...</p>}
 
       {!loading &&
