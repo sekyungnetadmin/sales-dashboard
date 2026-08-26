@@ -94,7 +94,6 @@ async function loadOrders() {
         <div style={{ padding: 40, textAlign: "center", color: "#aaa", border: "1px dashed #ddd", borderRadius: 12 }}>
           처리할 주문이 없습니다.
 
-          <OrdersNav />
         </div>
       )}
 
@@ -218,6 +217,7 @@ async function loadOrders() {
           )}
         </div>
       ))}
+      <OrdersNav  />
     </div>
   );
 }
