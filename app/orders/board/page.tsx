@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import OrdersNav from "@/components/OrdersNav";
 
 type Order = {
   id: string;
@@ -38,7 +39,7 @@ export default function OrdersBoardPage() {
   ];
 
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px", fontFamily: "'Noto Sans KR', sans-serif" }}>
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 80px", fontFamily: "'Noto Sans KR', sans-serif" }}>
       <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>출고 현황판</h1>
 
       {loading && <p style={{ color: "#888" }}>불러오는 중...</p>}
@@ -64,7 +65,8 @@ export default function OrdersBoardPage() {
                 {g.label}
               </h2>
               <span style={{ fontSize: 12, color: "#999" }}>{g.orders.length}건</span>
-            </div>
+      <OrdersNav />
+           </div>
 
             {g.orders.length === 0 ? (
               <div style={{ fontSize: 13, color: "#bbb", padding: "8px 0" }}>없음</div>
