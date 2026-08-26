@@ -25,7 +25,7 @@ export default function OrdersNav() {
       {tabs.map((t) => {
         const active = pathname.startsWith(t.href);
         return (
-          
+          <a
             key={t.href}
             href={t.href}
             style={{
